@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CardForge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS & RESET
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:     #08090d;
+  --s1:     #0f1017;
+  --s2:     #16181f;
+  --s3:     #1e2029;
+  --border: rgba(255,255,255,0.07);
+  --brd2:   rgba(255,255,255,0.13);
+  --text:   #e8e6ff;
+  --muted:  #6b6a88;
+  --muted2: #9998b8;
+  --accent: #7c5cfc;
+  --acc2:   #a480ff;
+  --acc3:   #c8b4ff;
+  --gold:   #f0b429;
+  --gold2:  #ffd166;
+  --green:  #06d6a0;
+  --red:    #ef476f;
+  --blue:   #4cc9f0;
+  --claude: #d97706;
+  --gemini: #4285F4;
+  --r:      10px;
+  --r2:     16px;
+  --r3:     20px;
+  --fd: 'Bebas Neue', sans-serif;
+  --fb: 'Outfit', sans-serif;
+  --fm: 'DM Mono', monospace;
+}
+html,body{height:100%;}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden;font-size:15px;}
+button{font-family:var(--fb);cursor:pointer;}
+input,textarea,select{font-family:var(--fb);}
+a{color:var(--acc2);}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+#app{display:flex;flex-direction:column;height:100vh;}
+
+/* TOP BAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.25rem;height:52px;flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  background:rgba(8,9,13,0.97);backdrop-filter:blur(16px);
+  z-index:100;
+}
+.brand{font-family:var(--fd);font-size:1.6rem;letter-spacing:.06em;display:flex;align-items:center;gap:6px;}
+.brand-dot{color:var(--acc2);}
+.llm-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--s2);border:1px solid var(--brd2);
+  border-radius:20px;padding:4px 12px;font-size:.72rem;
+  font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted2);
+}
+.llm-badge:hover{border-color:var(--accent);color:var(--text);}
+.ldot{width:7px;height:7px;border-radius:50%;}
+.dc{background:var(--claude);}
+.dg{background:var(--gemini);}
+.dn{background:var(--red);}
+
+/* BOTTOM NAV */
+.nav{
+  display:flex;background:var(--s1);
+  border-top:1px solid var(--border);z-index:50;flex-shrink:0;
+}
+.ni{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:9px 4px;border:none;background:transparent;
+  color:var(--muted);font-size:.62rem;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;transition:color .2s;position:relative;
+}
+.ni .ico{font-size:1.15rem;}
+.ni.active{color:var(--acc2);}
+.ni.active::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:2px;background:var(--acc2);border-radius:0 0 2px 2px;
+}
+.nbadge{
+  position:absolute;top:5px;right:calc(50% - 18px);
+  background:var(--red);color:white;
+  width:15px;height:15px;border-radius:50%;
+  font-size:.5rem;display:flex;align-items:center;justify-content:center;font-weight:700;
+}
+
+/* CONTENT */
+.content{flex:1;overflow:hidden;position:relative;}
+.panel{display:none;height:100%;overflow-y:auto;}
+.panel.active{display:block;}
+
+/* ═══════════════════════════════════════════
+   COMMON
+═══════════════════════════════════════════ */
+.pp{padding:1.25rem;}
+.sl{font-size:.64rem;font-weight:700;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:.55rem;}
+.cb{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:1rem 1.1rem;margin-bottom:.75rem;}
+.cb h4{font-size:.68rem;font-weight:700;letter-spacing:.1em;color:var(--acc2);text-transform:uppercase;margin-bottom:.55rem;}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:var(--r);padding:10px 18px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.bp{background:var(--accent);color:white;}
+.bp:hover{background:#6a4de0;transform:translateY(-1px);}
+.bs{background:var(--s2);color:var(--muted2);border:1px solid var(--brd2);}
+.bs:hover{color:var(--text);border-color:var(--accent);}
+.bg2{background:var(--green);color:#001a12;}
+.bg2:hover{filter:brightness(1.1);}
+.bd{background:transparent;color:var(--red);border:1px solid rgba(239,71,111,.3);}
+.bd:hover{background:rgba(239,71,111,.1);}
+.bblock{width:100%;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:white;border-radius:50%;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.tag{display:inline-flex;align-items:center;background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.67rem;font-weight:600;color:var(--muted2);}
+.star{font-size:1rem;cursor:pointer;transition:transform .1s;color:var(--muted);}
+.star.lit{color:var(--gold);}
+.star:hover{transform:scale(1.2);}
+
+/* ═══════════════════════════════════════════
+   ENGINE PANEL
+═══════════════════════════════════════════ */
+.pw{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.pw textarea{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-size:.88rem;line-height:1.65;resize:none;padding:1rem;min-height:105px;caret-color:var(--acc2);}
+.pw textarea::placeholder{color:var(--muted);}
+.pf{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;border-top:1px solid var(--border);background:var(--s2);}
+.cc{font-size:.68rem;color:var(--muted);font-family:var(--fm);}
+
+.exscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+.exscroll::-webkit-scrollbar{display:none;}
+.exc{flex-shrink:0;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:9px 13px;cursor:pointer;transition:all .18s;text-align:left;width:155px;}
+.exc:hover{border-color:var(--accent);background:var(--s2);}
+.exc strong{display:block;font-size:.78rem;color:var(--text);margin-bottom:2px;}
+.exc span{font-size:.7rem;color:var(--muted);line-height:1.35;display:block;}
+
+.gst{font-size:.74rem;color:var(--muted);text-align:center;font-family:var(--fm);padding:7px;display:none;}
+
+/* Schema preview */
+.sp{display:none;}
+.sp.show{display:block;}
+.sptitle{font-family:var(--fd);font-size:1.75rem;letter-spacing:.05em;color:var(--acc3);}
+.mcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:7px;margin-top:7px;}
+.mc{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px;}
+.mc .me{font-size:1.25rem;display:block;margin-bottom:2px;}
+.mc .mn{font-weight:600;color:var(--text);font-size:.68rem;margin-bottom:2px;line-height:1.2;}
+.mc .mt{font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;color:var(--acc2);margin-bottom:2px;}
+.mc .ms{font-size:.62rem;color:var(--muted2);}
+.mc .mef{font-size:.59rem;color:var(--muted);line-height:1.3;margin-top:2px;}
+
+/* ═══════════════════════════════════════════
+   LIBRARY PANEL
+═══════════════════════════════════════════ */
+.lf{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:1rem;}
+.lf::-webkit-scrollbar{display:none;}
+.fp{flex-shrink:0;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:.7rem;font-weight:700;color:var(--muted2);cursor:pointer;transition:all .18s;white-space:nowrap;}
+.fp.active{background:var(--accent);border-color:var(--accent);color:white;}
+
+.gl{display:flex;flex-direction:column;gap:9px;}
+.gli{
+  background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);
+  padding:.9rem 1rem;cursor:pointer;transition:all .2s;
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;
+}
+.gli:hover{border-color:var(--brd2);background:var(--s2);}
+.gli.tr{border-color:rgba(240,180,41,.3);}
+.git{font-family:var(--fd);font-size:1.25rem;letter-spacing:.04em;color:var(--text);line-height:1;margin-bottom:3px;}
+.gim{font-size:.7rem;color:var(--muted);margin-bottom:5px;}
+.gitags{display:flex;gap:5px;flex-wrap:wrap;}
+.gia{display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
+.rd{font-size:.73rem;color:var(--gold2);font-weight:700;}
+
+.elib{text-align:center;padding:3rem 1rem;color:var(--muted);}
+.elib .big{font-size:2.75rem;margin-bottom:.75rem;opacity:.3;}
+.elib p{font-size:.83rem;line-height:1.6;}
+
+/* ═══════════════════════════════════════════
+   PLAY PANEL
+═══════════════════════════════════════════ */
+.pe{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;color:var(--muted);padding:2rem;text-align:center;}
+.pe .big{font-size:3rem;opacity:.2;}
+.pe h2{font-family:var(--fd);font-size:1.45rem;color:var(--text);opacity:.4;}
+
+.gui{display:flex;flex-direction:column;height:100%;}
+.gtb{padding:.65rem 1rem;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.gtb h2{font-family:var(--fd);font-size:1.15rem;letter-spacing:.04em;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tp{border-radius:20px;padding:4px 11px;font-size:.68rem;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.tp.p{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3);}
+.tp.e{background:rgba(239,71,111,.15);color:var(--red);border:1px solid rgba(239,71,111,.3);}
+
+.ts{display:none;align-items:center;gap:7px;padding:5px 1rem;background:rgba(124,92,252,.1);border-bottom:1px solid rgba(124,92,252,.2);font-size:.7rem;color:var(--acc3);font-family:var(--fm);flex-shrink:0;}
+.ts.show{display:flex;}
+.td span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-right:2px;animation:dp 1.2s infinite;}
+.td span:nth-child(2){animation-delay:.2s}.td span:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+.arena{flex:1;overflow-y:auto;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.75rem;min-height:0;}
+.ph{display:flex;align-items:center;gap:9px;}
+.hpw{flex:1;}
+.hpr{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+.hpl{font-size:.68rem;font-weight:700;width:20px;}
+.hpt{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.hpf{height:100%;border-radius:3px;transition:width .5s ease;}
+.hpf.p{background:var(--green);}
+.hpf.e{background:var(--red);}
+.hpn{font-size:.68rem;font-weight:700;min-width:36px;text-align:right;}
+.rrow{display:flex;gap:5px;flex-wrap:wrap;}
+.rpill{background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:.68rem;font-weight:600;display:flex;align-items:center;gap:4px;}
+
+.fz{min-height:75px;}
+.fl{font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.fl::after{content:'';flex:1;height:1px;background:var(--border);}
+.fc{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;min-height:68px;align-items:center;}
+.fc::-webkit-scrollbar{display:none;}
+.ef{color:var(--muted);font-size:.73rem;padding:.75rem 0;}
+
+.drow{display:flex;align-items:center;justify-content:center;gap:1rem;}
+.dpill{background:var(--s2);border:1px solid var(--brd2);border-radius:7px;padding:5px 13px;font-size:.73rem;font-weight:700;color:var(--muted2);display:flex;align-items:center;gap:5px;}
+
+.hz{border-top:1px solid var(--border);background:rgba(15,16,23,.9);padding:.65rem 1rem;flex-shrink:0;}
+.hlr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.hcards{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;}
+.hcards::-webkit-scrollbar{height:3px;}
+.hcards::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:2px;}
+
+.ar{display:flex;gap:5px;padding:.65rem 1rem;border-top:1px solid var(--border);background:var(--s1);flex-shrink:0;overflow-x:auto;}
+.ar::-webkit-scrollbar{display:none;}
+.ar .btn{flex-shrink:0;font-size:.76rem;padding:7px 13px;}
+
+.lt{display:flex;align-items:center;gap:6px;padding:5px 1rem;border-top:1px solid var(--border);background:var(--bg);font-size:.68rem;color:var(--muted);cursor:pointer;font-weight:700;letter-spacing:.07em;text-transform:uppercase;flex-shrink:0;}
+.ld{max-height:0;overflow:hidden;transition:max-height .3s ease;background:var(--bg);}
+.ld.open{max-height:180px;overflow-y:auto;}
+.li2{padding:.45rem 1rem;display:flex;flex-direction:column;gap:4px;}
+.le{font-size:.7rem;line-height:1.4;padding:4px 7px;background:var(--s1);border-radius:5px;border-left:2px solid var(--brd2);font-family:var(--fm);color:var(--muted2);}
+.le.pa{border-left-color:var(--acc2);color:var(--acc3);}
+.le.ea{border-left-color:var(--red);color:#fca5a5;}
+.le.sys{border-left-color:var(--gold);color:var(--gold2);}
+.le.win{border-left-color:var(--green);color:#6ee7b7;font-weight:700;}
+
+/* PLAY CARDS */
+.pc{flex-shrink:0;width:76px;height:108px;border-radius:9px;border:1.5px solid var(--brd2);background:var(--s2);display:flex;flex-direction:column;cursor:pointer;transition:transform .18s,border-color .18s;position:relative;overflow:hidden;user-select:none;}
+.pc:hover{transform:translateY(-5px);border-color:var(--accent);}
+.pc.selected{border-color:var(--acc2);box-shadow:0 0 0 2px rgba(164,128,255,.35);transform:translateY(-7px);}
+.pc.exhausted{opacity:.55;}
+.pc.ec{cursor:default;}
+.pc.ec:hover{transform:none;}
+.pct{padding:4px 5px;display:flex;justify-content:space-between;align-items:flex-start;}
+.pcc{background:var(--accent);color:white;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.58rem;}
+.pca{font-weight:800;font-size:.88rem;color:var(--gold);}
+.pcm{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+.pcb{padding:2px 5px 4px;}
+.pcn{font-weight:700;color:var(--text);font-size:.58rem;line-height:1.2;margin-bottom:1px;}
+.pck{font-size:.53rem;text-transform:uppercase;letter-spacing:.05em;}
+
+/* ═══════════════════════════════════════════
+   SETTINGS PANEL
+═══════════════════════════════════════════ */
+.ss{margin-bottom:1.4rem;}
+.ss h3{font-size:.63rem;font-weight:700;letter-spacing:.13em;color:var(--muted);text-transform:uppercase;margin-bottom:.7rem;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:.9rem;}
+.pcard{background:var(--s1);border:2px solid var(--border);border-radius:var(--r2);padding:.85rem;cursor:pointer;transition:all .2s;text-align:center;}
+.pcard:hover{border-color:var(--brd2);}
+.pcard.sp.cp{border-color:var(--claude);background:rgba(217,119,6,.08);}
+.pcard.sp.gp{border-color:var(--gemini);background:rgba(66,133,244,.08);}
+.pcard .pi{font-size:1.7rem;margin-bottom:5px;}
+.pcard .pn{font-weight:700;font-size:.88rem;margin-bottom:2px;}
+.pcard .psub{font-size:.7rem;color:var(--muted);line-height:1.35;}
+
+.fg{margin-bottom:.7rem;}
+.flt{font-size:.76rem;font-weight:600;color:var(--muted2);margin-bottom:4px;display:block;}
+.fi{width:100%;background:var(--s2);border:1px solid var(--brd2);border-radius:var(--r);padding:8px 11px;color:var(--text);font-size:.83rem;outline:none;transition:border-color .2s;}
+.fi:focus{border-color:var(--accent);}
+.fi::placeholder{color:var(--muted);}
+.fsel{width:100%;background:var(--s2);border:1px solid var(--brd2);border-radius:var(--r);padding:8px 11px;color:var(--text);font-size:.83rem;outline:none;appearance:none;}
+.kw{font-size:.7rem;color:var(--muted);margin-top:3px;line-height:1.5;}
+
+.trow{display:flex;align-items:center;justify-content:space-between;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:9px 13px;margin-bottom:7px;}
+.trow span{font-size:.81rem;font-weight:500;}
+.tog{width:34px;height:19px;background:var(--s3);border-radius:20px;cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0;}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:var(--muted);transition:all .2s;}
+.tog.on{background:var(--accent);}
+.tog.on::after{left:18px;background:white;}
+
+/* ═══════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════ */
+.mo{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);align-items:center;justify-content:center;backdrop-filter:blur(10px);padding:1rem;}
+.mo.show{display:flex;}
+.mb{background:var(--s1);border:1px solid var(--brd2);border-radius:var(--r3);padding:2.25rem 1.75rem;text-align:center;max-width:330px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.mico{font-size:3.25rem;margin-bottom:.65rem;}
+.mtit{font-family:var(--fd);font-size:1.9rem;letter-spacing:.04em;margin-bottom:.4rem;}
+.msub{color:var(--muted2);font-size:.83rem;margin-bottom:1.25rem;line-height:1.6;}
+.mstars{display:flex;justify-content:center;gap:7px;margin-bottom:.75rem;}
+.mstars .star{font-size:1.45rem;}
+.rlbl{font-size:.75rem;color:var(--muted);margin-bottom:.9rem;}
+.mbtns{display:flex;flex-direction:column;gap:7px;}
+
+.lmo{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.8);align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);}
+.lmo.show{display:flex;}
+.lsh{background:var(--s1);border:1px solid var(--brd2);border-radius:var(--r3) var(--r3) 0 0;padding:1.4rem;width:100%;max-width:440px;animation:slideUp .3s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh{width:34px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 1.1rem;}
+
+/* ═══════════════════════════════════════════
+   DECK PRESETS
+═══════════════════════════════════════════ */
+.deck-region{margin-bottom:1rem;}
+.deck-region-label{font-size:.6rem;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:7px;}
+.deck-region-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.deck-scroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;}
+.deck-scroll::-webkit-scrollbar{display:none;}
+.dck{
+  flex-shrink:0;width:90px;background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r2);padding:9px 8px;cursor:pointer;transition:all .2s;
+  text-align:center;position:relative;
+}
+.dck:hover{border-color:var(--accent);background:var(--s2);}
+.dck.sel{border-color:var(--acc2);background:rgba(164,128,255,.08);}
+.dck.sel::after{content:'✓';position:absolute;top:4px;right:6px;font-size:.6rem;font-weight:700;color:var(--acc2);}
+.dck-ico{font-size:1.6rem;margin-bottom:4px;display:block;line-height:1;}
+.dck-name{font-size:.67rem;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:2px;}
+.dck-sub{font-size:.58rem;color:var(--muted);line-height:1.3;}
+
+/* Deck detail modal */
+.dmo{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.9);align-items:flex-end;justify-content:center;backdrop-filter:blur(10px);}
+.dmo.show{display:flex;}
+.dsh{
+  background:var(--s1);border:1px solid var(--brd2);
+  border-radius:var(--r3) var(--r3) 0 0;
+  padding:1.25rem 1.25rem 1.5rem;width:100%;max-width:520px;
+  max-height:88vh;overflow-y:auto;
+  animation:slideUp .3s ease;
+}
+.dsh-hero{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;}
+.dsh-ico{font-size:3rem;line-height:1;flex-shrink:0;}
+.dsh-htxt h2{font-family:var(--fd);font-size:1.5rem;letter-spacing:.04em;color:var(--text);margin-bottom:2px;}
+.dsh-htxt p{font-size:.75rem;color:var(--muted);line-height:1.5;}
+.dsh-origin{display:inline-flex;align-items:center;gap:5px;background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.65rem;font-weight:600;color:var(--muted2);margin-bottom:.85rem;}
+
+.suit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:.85rem;}
+.suit-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;}
+.suit-card .sico{font-size:1.25rem;display:block;margin-bottom:3px;}
+.suit-card .snm{font-size:.62rem;font-weight:600;color:var(--text);}
+.suit-card .str{font-size:.56rem;color:var(--muted);}
+
+.ranks-wrap{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;margin-bottom:.85rem;}
+.ranks-wrap h4{font-size:.62rem;font-weight:700;letter-spacing:.1em;color:var(--acc2);text-transform:uppercase;margin-bottom:.5rem;}
+.ranks-list{display:flex;flex-wrap:wrap;gap:5px;}
+.rank-pip{background:var(--s3);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:.65rem;color:var(--muted2);}
+.rank-pip.special{border-color:rgba(240,180,41,.4);color:var(--gold2);}
+
+.dsh-note{font-size:.73rem;color:var(--muted2);line-height:1.6;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;margin-bottom:.85rem;}
+.dsh-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* ═══════════════════════════════════════════
+   DESKTOP ≥640px
+═══════════════════════════════════════════ */
+@media(min-width:640px){
+  body{overflow:hidden;}
+  #app{flex-direction:row;}
+  .topbar{display:none;}
+  .nav{
+    flex-direction:column;width:70px;flex-shrink:0;
+    border-top:none;border-right:1px solid var(--border);
+    padding:1rem 0;justify-content:flex-start;gap:3px;
+  }
+  .nav::before{
+    content:'CF';font-family:var(--fd);font-size:1.25rem;
+    color:var(--acc2);letter-spacing:.06em;text-align:center;
+    display:block;padding:5px 0 14px;border-bottom:1px solid var(--border);margin-bottom:7px;
+  }
+  .ni{padding:11px 4px;border-radius:0;}
+  .ni.active::before{top:20%;bottom:20%;left:0;right:auto;width:2px;height:auto;border-radius:0 2px 2px 0;}
+  .content{flex:1;}
+  .pp{padding:1.6rem 2rem;max-width:760px;margin:0 auto;}
+  .lmo{align-items:center;}
+  .lsh{border-radius:var(--r3);margin:auto;}
+}
+
+/* WIDE GAME LAYOUT ≥900px */
+@media(min-width:900px){
+  .gui{flex-direction:row;}
+  .gmain{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .gsd{width:255px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--s1);}
+  .lt,.ld{display:none;}
+  .gsd .sdt{padding:.7rem;border-bottom:1px solid var(--border);font-size:.62rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;}
+  .gsd .sla{flex:1;overflow-y:auto;padding:.65rem;display:flex;flex-direction:column;gap:4px;}
+  .gsd .sba{padding:.7rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:5px;}
+  .gsd .sba .btn{font-size:.75rem;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════ NAV ══════════ -->
+<nav class="nav" id="main-nav">
+  <button class="ni active" data-p="engine" onclick="App.nav('engine')"><span class="ico">⚙️</span>Engine</button>
+  <button class="ni" data-p="library" onclick="App.nav('library')"><span class="ico">📚</span>Library<span class="nbadge" id="lib-badge" style="display:none">0</span></button>
+  <button class="ni" data-p="play" onclick="App.nav('play')"><span class="ico">🎮</span>Play</button>
+  <button class="ni" data-p="settings" onclick="App.nav('settings')"><span class="ico">⚙</span>Config</button>
+</nav>
+
+<div style="display:flex;flex-direction:column;flex:1;min-width:0;">
+<!-- ══════════ TOPBAR (mobile) ══════════ -->
+<header class="topbar">
+  <div class="brand">Card<span class="brand-dot">Forge</span></div>
+  <div class="llm-badge" onclick="LLMConfig.showSheet()">
+    <div class="ldot dn" id="pb"></div>
+    <span id="pl">No API</span>
+  </div>
+</header>
+
+<div class="content">
+
+<!-- ════════════════════════════════
+     PANEL: ENGINE
+════════════════════════════════ -->
+<div class="panel active" id="panel-engine">
+<div class="pp">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;">
+    <div>
+      <div style="font-family:var(--fd);font-size:1.9rem;letter-spacing:.04em;">GAME ENGINE</div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:1px;">Describe any card game — AI builds it instantly</div>
+    </div>
+    <div class="llm-badge" onclick="LLMConfig.showSheet()">
+      <div class="ldot dn" id="pb2"></div><span id="pl2">No API</span>
+    </div>
+  </div>
+
+  <div class="sl">Your Game Idea</div>
+  <div class="pw" style="margin-bottom:.7rem;">
+    <textarea id="gp" placeholder="Describe your card game... e.g. 'A Viking-themed battle game where players recruit warriors, unleash Norse gods, and use rune cards that modify attacks and weather events.'" oninput="Engine.onInput()"></textarea>
+    <div class="pf">
+      <span class="cc" id="cc">0 / 600</span>
+      <button class="btn bs" style="padding:4px 11px;font-size:.7rem;" onclick="$('gp').value='';Engine.onInput()">Clear</button>
+    </div>
+  </div>
+
+  <div class="sl">Quick Examples</div>
+  <div class="exscroll" style="margin-bottom:1.1rem;">
+    <button class="exc" onclick="Engine.eg(this)"><strong>⚔️ Fantasy Battle</strong><span>Knights, spells & dragons. Classic magic card combat.</span></button>
+    <button class="exc" onclick="Engine.eg(this)"><strong>🚀 Space Fleet</strong><span>Sci-fi ships, lasers & warp drives. Destroy the enemy flagship.</span></button>
+    <button class="exc" onclick="Engine.eg(this)"><strong>🌿 Nature Clash</strong><span>Elemental spirits clash through seasons and storms.</span></button>
+    <button class="exc" onclick="Engine.eg(this)"><strong>🏴‍☠️ Pirate Raid</strong><span>Crew your ship, loot treasures, fire cannons at sea monsters.</span></button>
+    <button class="exc" onclick="Engine.eg(this)"><strong>🧟 Zombie Horde</strong><span>Survivors vs the undead. Resources dwindle as the horde grows.</span></button>
+    <button class="exc" onclick="Engine.eg(this)"><strong>🏰 Dungeon Raid</strong><span>Heroes vs dungeon master. Traps, monsters, epic boss fights.</span></button>
+  </div>
+
+  <!-- Deck Presets -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem;">
+    <div class="sl" style="margin:0;">Base Deck Preset <span style="font-size:.6rem;color:var(--muted);font-weight:400;letter-spacing:0;">(optional — uses a real-world deck)</span></div>
+    <button class="btn bs" id="clrdeck" style="padding:3px 10px;font-size:.65rem;display:none;" onclick="DeckPresets.clear()">✕ Clear</button>
+  </div>
+
+  <div id="preset-panel">
+    <div class="deck-region">
+      <div class="deck-region-label">🌍 European Suited</div>
+      <div class="deck-scroll" id="dscroll-eu"></div>
+    </div>
+    <div class="deck-region">
+      <div class="deck-region-label">🌏 East Asian</div>
+      <div class="deck-scroll" id="dscroll-asia"></div>
+    </div>
+    <div class="deck-region">
+      <div class="deck-region-label">🌐 International & Tarot</div>
+      <div class="deck-scroll" id="dscroll-intl"></div>
+    </div>
+  </div>
+
+  <div style="height:.85rem;"></div>
+  <button class="btn bp bblock" id="genbtn" onclick="Engine.generate()" style="font-size:.95rem;padding:12px;">✨ Generate Game</button>
+  <div class="gst" id="gst"></div>
+
+  <!-- Schema preview -->
+  <div class="sp" id="spv">
+    <div style="height:1px;background:var(--border);margin:1.4rem 0;"></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.9rem;gap:1rem;">
+      <div>
+        <div class="sptitle" id="spt">—</div>
+        <div style="font-size:.76rem;color:var(--muted);margin-top:2px;" id="sptag"></div>
+      </div>
+    </div>
+    <div class="cb"><h4>📋 Overview</h4><div id="spov" style="font-size:.8rem;color:var(--muted2);line-height:1.65;"></div></div>
+    <div class="cb"><h4>⭐ Special Rules</h4><div id="sprl" style="font-size:.8rem;color:var(--muted2);line-height:1.65;"></div></div>
+    <div class="cb"><h4>🃏 Deck Preview</h4><div class="mcg" id="spcards"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:.7rem;">
+      <button class="btn bg2 bblock" onclick="GameRunner.launch()">▶ Play Now</button>
+      <button class="btn bs bblock" onclick="Library.savePrompt()">💾 Save Game</button>
+    </div>
+    <div style="height:1.5rem;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════
+     PANEL: LIBRARY
+════════════════════════════════ -->
+<div class="panel" id="panel-library">
+<div class="pp">
+  <div style="font-family:var(--fd);font-size:1.9rem;letter-spacing:.04em;margin-bottom:3px;">LIBRARY</div>
+  <div style="font-size:.76rem;color:var(--muted);margin-bottom:1rem;">Your saved card games · sorted by rating</div>
+  <div class="lf" id="lf">
+    <button class="fp active" data-f="all"     onclick="Library.filter('all',this)">All</button>
+    <button class="fp" data-f="top"     onclick="Library.filter('top',this)">⭐ Top Rated</button>
+    <button class="fp" data-f="fantasy" onclick="Library.filter('fantasy',this)">⚔️ Fantasy</button>
+    <button class="fp" data-f="sci-fi"  onclick="Library.filter('sci-fi',this)">🚀 Sci-Fi</button>
+    <button class="fp" data-f="nature"  onclick="Library.filter('nature',this)">🌿 Nature</button>
+    <button class="fp" data-f="dungeon" onclick="Library.filter('dungeon',this)">🏰 Dungeon</button>
+    <button class="fp" data-f="pirate"  onclick="Library.filter('pirate',this)">🏴‍☠️ Pirate</button>
+    <button class="fp" data-f="zombie"  onclick="Library.filter('zombie',this)">🧟 Zombie</button>
+    <button class="fp" data-f="other"   onclick="Library.filter('other',this)">🎴 Other</button>
+  </div>
+  <div class="gl" id="gl"></div>
+</div>
+</div>
+
+<!-- ════════════════════════════════
+     PANEL: PLAY
+════════════════════════════════ -->
+<div class="panel" id="panel-play">
+  <div class="pe" id="pempty">
+    <div class="big">🎮</div>
+    <h2>No game loaded</h2>
+    <p style="font-size:.83rem;line-height:1.6;">Generate a game in the Engine or load one from the Library.</p>
+  </div>
+
+  <div class="gui" id="gui" style="display:none;height:100%;">
+    <div class="gmain">
+      <div class="gtb">
+        <h2 id="runtitle">—</h2>
+        <div class="tp p" id="ttp">Your turn</div>
+      </div>
+      <div class="ts" id="tstrip"><div class="td"><span></span><span></span><span></span></div><span id="tmsg">Thinking...</span></div>
+
+      <div class="arena">
+        <!-- Enemy -->
+        <div>
+          <div class="ph">
+            <div class="hpw">
+              <div class="hpr">
+                <span class="hpl" style="color:#fca5a5;">❤️</span>
+                <div class="hpt"><div class="hpf e" id="ehpb" style="width:100%"></div></div>
+                <span class="hpn" id="ehpn" style="color:#fca5a5;">20/20</span>
+              </div>
+            </div>
+            <div class="rrow" id="eres"></div>
+          </div>
+          <div class="fz" style="margin-top:7px;">
+            <div class="fl">Opponent Field</div>
+            <div class="fc" id="efield"></div>
+          </div>
+        </div>
+
+        <!-- Centre -->
+        <div class="drow">
+          <div class="dpill">🃏 <span id="dcount">0</span></div>
+          <div style="font-size:1.5rem;" id="cevt">⚔️</div>
+          <div class="dpill">🗑️ <span id="disct">0</span></div>
+        </div>
+
+        <!-- Player -->
+        <div>
+          <div class="fz">
+            <div class="fl">Your Field</div>
+            <div class="fc" id="pfield"></div>
+          </div>
+          <div style="margin-top:7px;" class="ph">
+            <div class="hpw">
+              <div class="hpr">
+                <span class="hpl" style="color:#6ee7b7;">💚</span>
+                <div class="hpt"><div class="hpf p" id="phpb" style="width:100%"></div></div>
+                <span class="hpn" id="phpn" style="color:#6ee7b7;">20/20</span>
+              </div>
+            </div>
+            <div class="rrow" id="pres"></div>
+          </div>
+        </div>
+      </div><!-- /arena -->
+
+      <div class="hz">
+        <div class="hlr">
+          <div class="sl" style="margin:0;">Hand <span style="color:var(--muted);font-weight:400;" id="hcnt"></span></div>
+          <div style="font-size:.67rem;color:var(--muted);">Tap → select · tap again → play</div>
+        </div>
+        <div class="hcards" id="phand"></div>
+      </div>
+
+      <div class="ar">
+        <button class="btn bp" id="btne" onclick="GameRunner.endTurn()">End Turn →</button>
+        <button class="btn bs" id="btnd" onclick="GameRunner.drawCard()">🃏 Draw</button>
+        <button class="btn bs" onclick="GameRunner.attackSel()">⚔️ Attack</button>
+        <button class="btn bd" onclick="GameRunner.quit()">✕ Quit</button>
+      </div>
+
+      <!-- Mobile log drawer -->
+      <div class="lt" onclick="GameRunner.toggleLog()">📜 Game Log <span id="larrow">▲</span></div>
+      <div class="ld" id="ldr"><div class="li2" id="logm"></div></div>
+    </div><!-- /gmain -->
+
+    <!-- Desktop sidebar -->
+    <div class="gsd">
+      <div class="sdt">Game Log</div>
+      <div class="sla" id="logd"></div>
+      <div class="sba">
+        <button class="btn bp" id="btned" onclick="GameRunner.endTurn()">End Turn →</button>
+        <button class="btn bs" id="btndd" onclick="GameRunner.drawCard()">🃏 Draw Card</button>
+        <button class="btn bs" onclick="GameRunner.attackSel()">⚔️ Attack</button>
+        <button class="btn bd" onclick="GameRunner.quit()">✕ Quit</button>
+      </div>
+    </div>
+  </div><!-- /gui -->
+</div>
+
+<!-- ════════════════════════════════
+     PANEL: SETTINGS
+════════════════════════════════ -->
+<div class="panel" id="panel-settings">
+<div class="pp">
+  <div style="font-family:var(--fd);font-size:1.9rem;letter-spacing:.04em;margin-bottom:3px;">CONFIG</div>
+  <div style="font-size:.76rem;color:var(--muted);margin-bottom:1.4rem;">Choose your AI provider and API keys</div>
+
+  <div class="ss">
+    <h3>AI Provider</h3>
+    <div class="pg">
+      <div class="pcard cp" id="pclaude" onclick="LLMConfig.select('claude')">
+        <div class="pi">🟠</div><div class="pn">Claude</div>
+        <div class="psub">Anthropic. Excellent creative game design.</div>
+      </div>
+      <div class="pcard gp" id="pgemini" onclick="LLMConfig.select('gemini')">
+        <div class="pi">🔵</div><div class="pn">Gemini</div>
+        <div class="psub">Google. Fast & capable JSON generation.</div>
+      </div>
+    </div>
+    <div style="font-size:.7rem;color:var(--muted);line-height:1.5;background:var(--s2);border-radius:var(--r);padding:9px 13px;border:1px solid var(--border);">
+      ⚠️ API keys are stored only in your browser's localStorage and sent only to the selected provider.
+    </div>
+  </div>
+
+  <div class="ss" id="ccfg">
+    <h3>Claude Configuration</h3>
+    <div class="fg"><label class="flt">API Key</label><input type="password" class="fi" id="ckey" placeholder="sk-ant-..." oninput="LLMConfig.saveKeys()"><div class="kw">→ <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div></div>
+    <div class="fg"><label class="flt">Model</label>
+      <select class="fsel" id="cmodel" onchange="LLMConfig.saveKeys()">
+        <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (Recommended)</option>
+        <option value="claude-opus-4-5">Claude Opus 4.5</option>
+        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="ss" id="gcfg" style="display:none;">
+    <h3>Gemini Configuration</h3>
+    <div class="fg"><label class="flt">API Key</label><input type="password" class="fi" id="gkey" placeholder="AIza..." oninput="LLMConfig.saveKeys()"><div class="kw">→ <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a></div></div>
+    <div class="fg"><label class="flt">Model</label>
+      <select class="fsel" id="gmodel" onchange="LLMConfig.saveKeys()">
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</option>
+        <option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash Preview</option>
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="ss">
+    <h3>Gameplay</h3>
+    <div class="trow"><span>Auto-draw on turn start</span><button class="tog on" id="tad" onclick="Cfg.tog('autodraw',this)"></button></div>
+    <div class="trow"><span>Verbose effect log</span><button class="tog on" id="tvb" onclick="Cfg.tog('verbose',this)"></button></div>
+    <div class="trow"><span>AI move delay (natural feel)</span><button class="tog on" id="tdl" onclick="Cfg.tog('delay',this)"></button></div>
+  </div>
+
+  <div class="ss"><h3>Data</h3><button class="btn bd bblock" onclick="Library.clearAll()">🗑️ Clear All Saved Games</button></div>
+</div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /col -->
+</div><!-- /app -->
+
+<!-- Provider quick-switch sheet -->
+<div class="lmo" id="lmo" onclick="if(event.target===this)LLMConfig.hideSheet()">
+  <div class="lsh">
+    <div class="sh"></div>
+    <div style="font-weight:700;font-size:.95rem;margin-bottom:.9rem;">Switch AI Provider</div>
+    <div class="pg" style="margin-bottom:.9rem;">
+      <div class="pcard cp" onclick="LLMConfig.select('claude');LLMConfig.hideSheet()"><div class="pi">🟠</div><div class="pn">Claude</div></div>
+      <div class="pcard gp" onclick="LLMConfig.select('gemini');LLMConfig.hideSheet()"><div class="pi">🔵</div><div class="pn">Gemini</div></div>
+    </div>
+    <button class="btn bs bblock" onclick="App.nav('settings');LLMConfig.hideSheet()">⚙ Full Config</button>
+  </div>
+</div>
+
+<!-- Win/Lose modal -->
+<div class="mo" id="wmo">
+  <div class="mb">
+    <div class="mico" id="wico">🏆</div>
+    <div class="mtit" id="wtit">Victory!</div>
+    <div class="msub" id="wsub"></div>
+    <div id="ratesec" style="display:none;">
+      <div class="rlbl">Rate this game</div>
+      <div class="mstars" id="mstars">
+        <span class="star" onclick="GameRunner.rate(1)">★</span>
+        <span class="star" onclick="GameRunner.rate(2)">★</span>
+        <span class="star" onclick="GameRunner.rate(3)">★</span>
+        <span class="star" onclick="GameRunner.rate(4)">★</span>
+        <span class="star" onclick="GameRunner.rate(5)">★</span>
+      </div>
+    </div>
+    <div class="mbtns">
+      <button class="btn bg2 bblock" onclick="GameRunner.restart()">🔄 Play Again</button>
+      <button class="btn bs bblock" onclick="Library.saveClose()">💾 Save to Library</button>
+      <button class="btn bs bblock" onclick="App.nav('engine');$('wmo').classList.remove('show')">⚙ New Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deck detail modal -->
+<div class="dmo" id="dmo" onclick="if(event.target===this)DeckPresets.closeDetail()">
+  <div class="dsh" id="dsh">
+    <div class="sh"></div>
+    <div class="dsh-hero">
+      <div class="dsh-ico" id="d-ico">🃏</div>
+      <div class="dsh-htxt">
+        <h2 id="d-name">Deck</h2>
+        <p id="d-tagline"></p>
+      </div>
+    </div>
+    <div class="dsh-origin" id="d-origin"></div>
+
+    <div class="sl">Suits</div>
+    <div class="suit-grid" id="d-suits"></div>
+
+    <div class="ranks-wrap">
+      <h4>Ranks / Cards per suit</h4>
+      <div class="ranks-list" id="d-ranks"></div>
+    </div>
+
+    <div class="dsh-note" id="d-note"></div>
+
+    <div class="dsh-btns">
+      <button class="btn bs" onclick="DeckPresets.closeDetail()">Cancel</button>
+      <button class="btn bp" onclick="DeckPresets.confirmSelect()">Use This Deck →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function LS(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function LSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+
+/* ══════════════════════════════════════
+   MODULE: App
+══════════════════════════════════════ */
+const App={
+  nav(name){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
+    $('panel-'+name).classList.add('active');
+    document.querySelector(`[data-p="${name}"]`).classList.add('active');
+    if(name==='library')Library.render();
+  }
+};
+
+/* ══════════════════════════════════════
+   MODULE: LLMConfig
+══════════════════════════════════════ */
+const LLMConfig={
+  prov:'claude',ck:'',gk:'',cm:'claude-sonnet-4-20250514',gm:'gemini-2.0-flash',
+  load(){
+    this.prov=LS('cp','claude');this.ck=LS('cck','');this.gk=LS('cgk','');
+    this.cm=LS('ccm','claude-sonnet-4-20250514');this.gm=LS('cgm','gemini-2.0-flash');
+    if($('ckey'))  $('ckey').value=this.ck;
+    if($('gkey'))  $('gkey').value=this.gk;
+    if($('cmodel'))$('cmodel').value=this.cm;
+    if($('gmodel'))$('gmodel').value=this.gm;
+    this.ui();
+  },
+  select(p){this.prov=p;LSset('cp',p);this.ui();},
+  saveKeys(){
+    this.ck=$('ckey').value.trim();this.gk=$('gkey').value.trim();
+    this.cm=$('cmodel').value;this.gm=$('gmodel').value;
+    LSset('cck',this.ck);LSset('cgk',this.gk);LSset('ccm',this.cm);LSset('cgm',this.gm);
+    this.ui();
+  },
+  ui(){
+    const p=this.prov,hasKey=p==='claude'?!!this.ck:!!this.gk;
+    const dc=hasKey?(p==='claude'?'dc':'dg'):'dn';
+    const lbl=p==='claude'?'🟠 Claude':'🔵 Gemini';
+    const full=hasKey?lbl:lbl+' (no key)';
+    ['pb','pb2'].forEach(id=>{const e=$(id);if(e)e.className='ldot '+dc;});
+    ['pl','pl2'].forEach(id=>{const e=$(id);if(e)e.textContent=full;});
+    ['pclaude','pgemini'].forEach(id=>{const e=$(id);if(e)e.classList.remove('sp');});
+    const pc=$(p==='claude'?'pclaude':'pgemini');if(pc)pc.classList.add('sp');
+    if($('ccfg'))$('ccfg').style.display=p==='claude'?'block':'none';
+    if($('gcfg'))$('gcfg').style.display=p==='gemini'?'block':'none';
+  },
+  showSheet(){$('lmo').classList.add('show');},
+  hideSheet(){$('lmo').classList.remove('show');},
+  key(){return this.prov==='claude'?this.ck:this.gk;},
+  model(){return this.prov==='claude'?this.cm:this.gm;},
+  async call(sys,user){
+    const p=this.prov,k=this.key();
+    if(!k)throw new Error(`No ${p==='claude'?'Claude':'Gemini'} API key. Go to Config tab.`);
+    if(p==='claude'){
+      const r=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01'},
+        body:JSON.stringify({model:this.cm,max_tokens:4000,system:sys,messages:[{role:'user',content:user}]})
+      });
+      if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Claude error');}
+      const d=await r.json();return d.content.map(b=>b.text||'').join('');
+    }
+    if(p==='gemini'){
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/${this.gm}:generateContent?key=${k}`;
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:sys+'\n\n'+user}]}],generationConfig:{maxOutputTokens:4000,temperature:.8}})});
+      if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Gemini error');}
+      const d=await r.json();return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    }
+    throw new Error('Unknown provider');
+  }
+};
+
+/* ══════════════════════════════════════
+   MODULE: Cfg (Settings)
+══════════════════════════════════════ */
+const Cfg={
+  p:{},
+  load(){
+    this.p=LS('prefs',{autodraw:true,verbose:true,delay:true});
+    ['autodraw','verbose','delay'].forEach(k=>{
+      const m={autodraw:'tad',verbose:'tvb',delay:'tdl'}[k];
+      const e=$(m);if(e)e.className='tog'+(this.p[k]!==false?' on':'');
+    });
+  },
+  tog(k,el){this.p[k]=!this.p[k];el.className='tog'+(this.p[k]?' on':'');LSset('prefs',this.p);},
+  get(k){return this.p[k]!==false;}
+};
+
+/* ══════════════════════════════════════
+   MODULE: Engine
+══════════════════════════════════════ */
+const EG_PROMPTS={
+  '⚔️ Fantasy Battle':'A classic fantasy battle card game for 2 players. Command armies of knights, wizards, archers, and mythical creatures. Include spell cards (fireball, healing, shield wall), creature cards with attack/defense values, and equipment cards that boost units. Win by reducing enemy HP to 0. Players start with 20 HP and 5 cards. Resource: mana that regenerates each turn.',
+  '🚀 Space Fleet':'A sci-fi space fleet battle game. Deploy fighter ships, cruisers, and capital ships. Include weapon cards (laser, EMP, torpedo), shield cards, and warp/evasion cards. Win by destroying the enemy flagship. 25 HP each, draw 4 cards per turn. Resource: energy credits. Special: asteroid events affect both players.',
+  '🌿 Nature Clash':'An elemental nature spirits card game. Players control fire, water, earth and air spirits. Include seasonal event cards, weather cards that buff certain elements, and animal companion cards. Elements have strengths and weaknesses. Win by eliminating enemy spirits. 25 HP, draw 3 cards. Resource: nature essence.',
+  '🏴‍☠️ Pirate Raid':'A pirate-themed card game. Recruit crew members (cannoneer, navigator, cook, quartermaster), deploy ships, and fire cannons. Include treasure cards that grant bonuses, sea monster event cards, wind cards that change attack power. Win by sinking the enemy ship. 30 HP, draw 5 cards. Resource: gold doubloons.',
+  '🧟 Zombie Horde':'A post-apocalyptic survivors vs zombie horde game. One player is Survivors (limited resources, must defend), one is the Horde (unlimited but weak zombies). Include barricade cards, weapon cards, infection cards. Resources dwindle for survivors. Win condition: survivors last 10 rounds OR horde reduces survivor HP to 0. 20 HP.',
+  '🏰 Dungeon Raid':'A dungeon crawl card game. Hero player uses warrior, rogue and healer cards. Dungeon player uses monster, trap, and cursed room cards. Hero must defeat boss card to win. Dungeon wins if Hero HP hits 0. Hero has 30 HP, Dungeon has 50 HP. Include loot and potion cards heroes can collect.',
+};
+const SYS_PROMPT=`You are a card game designer. Return ONLY a valid JSON object — no markdown fences, no explanation, no preamble.
+JSON structure exactly:
+{
+  "title":"Short catchy name",
+  "tagline":"One exciting sentence",
+  "theme":"fantasy|sci-fi|nature|dungeon|pirate|zombie|other",
+  "baseDeck":"none|french|spanish|german|italian|swiss|hanafuda|hwatu|mahjong|tarot|uno|poker|karuta",
+  "startingHP":20,
+  "startingHandSize":5,
+  "maxHandSize":7,
+  "resources":[{"name":"Mana","emoji":"💧","startAmount":3,"regenPerTurn":3,"max":10}],
+  "winCondition":"Reduce opponent HP to 0",
+  "cardTypes":[{"type":"creature","hasAttack":true},{"type":"spell","hasAttack":false}],
+  "deck":[{"id":"c1","name":"Card Name","type":"creature","emoji":"🗡️","cost":2,"attack":3,"defense":2,"hp":2,"effect":"Brief effect","count":2}],
+  "aiStrategy":"aggressive|defensive|balanced",
+  "specialRules":["Rule 1","Rule 2"]
+}
+Requirements: deck array = 20 entries. count field multiplies copies. Varied costs 1-6. Thematic emojis. Mix creature/spell/equipment/action types.
+IF a base deck is specified: card names and emojis must reflect the actual suits, ranks and special cards of that deck. The game mechanics should honour how that deck is traditionally used. Make it genuinely fun and thematic.`;
+
+const Engine={
+  game:null,
+  onInput(){$('cc').textContent=$('gp').value.length+' / 600';},
+  eg(el){$('gp').value=EG_PROMPTS[el.querySelector('strong').textContent.trim()]||'';this.onInput();},
+  async generate(){
+    const prompt=$('gp').value.trim();
+    if(!prompt){alert('Describe your game first!');return;}
+    const btn=$('genbtn');
+    btn.innerHTML='<div class="spin"></div> Generating...';btn.disabled=true;
+    const st=$('gst');st.style.display='block';st.style.color='var(--muted)';
+    st.textContent=`Using ${LLMConfig.prov==='claude'?'Claude':'Gemini'}...`;
+    $('spv').classList.remove('show');
+    try{
+      const deckCtx = DeckPresets.getContext();
+      const userMsg = 'Design a card game: ' + prompt + deckCtx;
+      const provName = LLMConfig.prov==='claude'?'Claude':'Gemini';
+      const deckName = DeckPresets.selected ? ` with ${DECKS.find(d=>d.id===DeckPresets.selected)?.name||'custom'} deck` : '';
+      st.textContent = `Generating via ${provName}${deckName}...`;
+      const raw=await LLMConfig.call(SYS_PROMPT, userMsg);
+      const clean=raw.replace(/```json|```/g,'').trim();
+      const g=JSON.parse(clean);
+      this.game=g;this.renderSchema(g);
+      st.textContent='✅ Game generated! Review below, then play or save.';
+    }catch(e){
+      st.style.color='var(--red)';
+      st.textContent='❌ '+(e.message||'Failed. Check API key.');
+    }
+    btn.innerHTML='✨ Generate Game';btn.disabled=false;
+  },
+  buildDeck(game){
+    const out=[];let uid=0;
+    for(const c of game.deck){
+      const n=Math.min(c.count||1,4);
+      for(let i=0;i<n;i++)out.push({...c,uid:`${c.id}-${uid++}`,hp:c.hp||c.defense||1,maxHp:c.hp||c.defense||1,exhausted:false});
+    }
+    return shuffle(out);
+  },
+  renderSchema(g){
+    $('spt').textContent=g.title;$('sptag').textContent=g.tagline;
+    const r=g.resources?.[0];
+    const baseDeckInfo = g.baseDeck && g.baseDeck !== 'none'
+      ? DECKS.find(d=>d.id===g.baseDeck) : null;
+    const deckBadge = baseDeckInfo
+      ? `&nbsp;·&nbsp; <b>Base Deck:</b> ${baseDeckInfo.icon} ${baseDeckInfo.name}` : '';
+    $('spov').innerHTML=`<b>HP:</b> ${g.startingHP} &nbsp;·&nbsp; <b>Hand:</b> ${g.startingHandSize} &nbsp;·&nbsp; <b>Resource:</b> ${r?r.emoji+' '+r.name:'—'} &nbsp;·&nbsp; <b>Win:</b> ${g.winCondition}${deckBadge}<br><b>AI:</b> ${g.aiStrategy} strategy`;
+    $('sprl').innerHTML=(g.specialRules||[]).map(x=>`• ${x}`).join('<br>')||'Standard rules.';
+    const deck=this.buildDeck(g);
+    $('spcards').innerHTML=deck.slice(0,12).map(c=>`<div class="mc"><span class="me">${c.emoji||'🃏'}</span><div class="mn">${c.name}</div><div class="mt">${c.type} · ${c.cost||0}💧</div>${c.attack!=null?`<div class="ms">⚔️${c.attack} 🛡️${c.defense||0}</div>`:''}<div class="mef">${(c.effect||'').slice(0,48)}${(c.effect||'').length>48?'…':''}</div></div>`).join('');
+    $('spv').classList.add('show');
+  }
+};
+
+/* ══════════════════════════════════════
+   MODULE: Library
+══════════════════════════════════════ */
+const Library={
+  data:[],cf:'all',
+  load(){this.data=LS('lib',[]);this.badge();},
+  badge(){const n=this.data.length,b=$('lib-badge');if(b){b.textContent=n;b.style.display=n>0?'flex':'none';}},
+  save(g,rating=0){
+    const i=this.data.findIndex(x=>x.title===g.title);
+    const plays=(i>=0?this.data[i].plays:0)||0;
+    const entry={...g,savedAt:Date.now(),rating,plays};
+    if(i>=0)this.data[i]=entry;else this.data.unshift(entry);
+    LSset('lib',this.data);this.badge();this.render();
+  },
+  setRating(title,stars){const g=this.data.find(x=>x.title===title);if(g){g.rating=stars;LSset('lib',this.data);this.render();}},
+  filter(f,el){this.cf=f;document.querySelectorAll('.fp').forEach(b=>b.classList.remove('active'));el.classList.add('active');this.render();},
+  filtered(){
+    const f=this.cf;let list=[...this.data];
+    if(f==='top')list=list.filter(g=>g.rating>=4);
+    else if(f!=='all')list=list.filter(g=>(g.theme||'other').toLowerCase().includes(f));
+    return list.sort((a,b)=>(b.rating||0)-(a.rating||0)||b.savedAt-a.savedAt);
+  },
+  render(){
+    const el=$('gl');if(!el)return;
+    const list=this.filtered();
+    const te={fantasy:'⚔️','sci-fi':'🚀',nature:'🌿',dungeon:'🏰',pirate:'🏴‍☠️',zombie:'🧟',other:'🎴'};
+    if(!list.length){
+      el.innerHTML=`<div class="elib"><div class="big">📚</div><p>${this.data.length===0?'No saved games yet. Generate one in the Engine!':'No games match this filter.'}</p></div>`;
+      return;
+    }
+    el.innerHTML=list.map(g=>{
+      const stars=Array.from({length:5},(_,j)=>`<span class="star ${j<(g.rating||0)?'lit':''}" onclick="Library.rateInline('${g.title.replace(/'/g,"\\'")}',${j+1},event)">★</span>`).join('');
+      return`<div class="gli ${g.rating>=4?'tr':''}" onclick="Library.load('${g.title.replace(/'/g,"\\'")}')">
+        <div>
+          <div class="git">${g.rating>=4?'🏆 ':''}${g.title}</div>
+          <div class="gim">${g.tagline}</div>
+          <div class="gitags">
+            <span class="tag">${te[g.theme]||'🎴'} ${g.theme||'card'}</span>
+            <span class="tag">❤️${g.startingHP}</span>
+            ${g.baseDeck && g.baseDeck!=='none' ? `<span class="tag">${DECKS.find(d=>d.id===g.baseDeck)?.icon||'🃏'} ${g.baseDeck}</span>` : ''}
+            ${g.plays?`<span class="tag">▶ ${g.plays}x</span>`:''}
+          </div>
+        </div>
+        <div class="gia">
+          <div style="display:flex;gap:2px;" onclick="event.stopPropagation()">${stars}</div>
+          ${g.rating?`<div class="rd">${g.rating}.0 ★</div>`:''}
+          <button class="btn bs" style="font-size:.68rem;padding:4px 9px;" onclick="event.stopPropagation();Library.del('${g.title.replace(/'/g,"\\'")}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  },
+  rateInline(title,stars,e){e.stopPropagation();this.setRating(title,stars);},
+  load(title){
+    const g=this.data.find(x=>x.title===title);if(!g)return;
+    Engine.game=g;if(g.plays!=null)g.plays++;else g.plays=1;
+    LSset('lib',this.data);GameRunner.launch();App.nav('play');
+  },
+  del(title){if(!confirm(`Delete "${title}"?`))return;this.data=this.data.filter(x=>x.title!==title);LSset('lib',this.data);this.badge();this.render();},
+  clearAll(){if(!confirm('Delete ALL saved games?'))return;this.data=[];LSset('lib',[]);this.badge();this.render();},
+  savePrompt(){const g=Engine.game;if(!g){alert('Generate a game first!');return;}this.save(g,0);App.nav('library');},
+  saveClose(){const g=Engine.game;if(!g)return;this.save(g,GameRunner.pendingRating||0);$('wmo').classList.remove('show');App.nav('library');}
+};
+
+/* ══════════════════════════════════════
+   MODULE: GameRunner
+══════════════════════════════════════ */
+const GameRunner={
+  gs:null,sel:null,logOpen:false,pendingRating:0,
+  launch(){
+    const g=Engine.game;if(!g){App.nav('engine');return;}
+    this.pendingRating=0;this.init(g);
+    $('pempty').style.display='none';$('gui').style.display='flex';
+    App.nav('play');
+    this.log('🎮 '+g.title+' started!','sys');this.log(g.tagline,'sys');
+    this.render();
+  },
+  init(g){
+    const res=g.resources||[{name:'Mana',emoji:'💧',startAmount:3,regenPerTurn:3,max:10}];
+    const pd=Engine.buildDeck(g),ed=Engine.buildDeck(g);
+    this.gs={
+      g,turn:1,phase:'Main',isP:true,over:false,
+      p:{hp:g.startingHP,mhp:g.startingHP,hand:pd.splice(0,g.startingHandSize),field:[],deck:pd,disc:[],res:res.map(r=>({...r,cur:r.startAmount}))},
+      e:{hp:g.startingHP,mhp:g.startingHP,hand:ed.splice(0,g.startingHandSize),field:[],deck:ed,disc:[],res:res.map(r=>({...r,cur:r.startAmount}))}
+    };
+    this.sel=null;
+    ['logm','logd'].forEach(id=>{const e=$(id);if(e)e.innerHTML='';});
+  },
+  render(){
+    const s=this.gs;if(!s)return;
+    $('runtitle').textContent=s.g.title;
+    const tp=$('ttp');
+    tp.textContent=s.isP?`Turn ${s.turn} — Your turn`:`Turn ${s.turn} — Opponent`;
+    tp.className='tp '+(s.isP?'p':'e');
+    const pp=Math.max(0,s.p.hp/s.p.mhp*100),ep=Math.max(0,s.e.hp/s.e.mhp*100);
+    $('phpb').style.width=pp+'%';$('ehpb').style.width=ep+'%';
+    $('phpn').textContent=Math.max(0,s.p.hp)+'/'+s.p.mhp;
+    $('ehpn').textContent=Math.max(0,s.e.hp)+'/'+s.e.mhp;
+    this.rRes('pres',s.p.res);this.rRes('eres',s.e.res);
+    $('dcount').textContent=s.p.deck.length;$('disct').textContent=s.p.disc.length;
+    this.rField('pfield',s.p.field,true);this.rField('efield',s.e.field,false);
+    this.rHand(s.p.hand);
+    const dis=!s.isP||s.over;
+    [$('btne'),$('btned')].forEach(b=>{if(b)b.disabled=dis;});
+    [$('btnd'),$('btndd')].forEach(b=>{if(b)b.disabled=dis||!s.p.deck.length;});
+  },
+  rRes(id,res){const el=$(id);if(!el)return;el.innerHTML=(res||[]).map(r=>`<div class="rpill">${r.emoji||'💧'} <b>${Math.floor(r.cur)}/${r.max||10}</b></div>`).join('');},
+  rField(id,field,isP){
+    const el=$(id);if(!el)return;
+    if(!field.length){el.innerHTML='<div class="ef">No cards</div>';return;}
+    el.innerHTML='';field.forEach(c=>{const d=this.mkCard(c,isP?'fp':'fe',isP);if(this.sel?.uid===c.uid)d.classList.add('selected');if(c.exhausted)d.classList.add('exhausted');el.appendChild(d);});
+  },
+  rHand(hand){
+    const el=$('phand');if(!el)return;
+    $('hcnt').textContent='('+hand.length+')';el.innerHTML='';
+    hand.forEach(c=>{const d=this.mkCard(c,'h',true);if(this.sel?.uid===c.uid)d.classList.add('selected');el.appendChild(d);});
+  },
+  mkCard(c,zone,isP){
+    const tc={creature:'#8b5cf6',spell:'#06b6d4',equipment:'#f0b429',trap:'#ef476f',event:'#06d6a0'}[c.type]||'#6b6a88';
+    const d=document.createElement('div');d.className='pc'+(isP?'':' ec');d.dataset.uid=c.uid;
+    d.innerHTML=`<div class="pct"><div class="pcc" style="background:${tc}">${c.cost||0}</div>${c.attack!=null?`<div class="pca">${c.attack}</div>`:''}</div><div class="pcm">${c.emoji||'🃏'}</div><div class="pcb"><div class="pcn">${c.name}</div><div class="pck" style="color:${tc}">${c.type}${c.type==='creature'?` ❤️${c.hp}`:''}</div></div>`;
+    if(zone==='h')d.onclick=()=>this.onHand(c);
+    else if(zone==='fp')d.onclick=()=>this.onField(c);
+    return d;
+  },
+  onHand(c){
+    if(!this.gs.isP||this.gs.over)return;
+    if(this.sel?.uid===c.uid){this.play(c);return;}
+    this.sel=c;this.log(`Selected ${c.name}. Tap again to play.`,'pa');this.render();
+  },
+  onField(c){
+    if(!this.gs.isP||this.gs.over)return;
+    if(c.exhausted){this.log(`${c.name} is exhausted.`,'sys');return;}
+    this.sel=c;this.log(`${c.name} ready. Click Attack.`,'pa');this.render();
+  },
+  play(c){
+    const s=this.gs,res=s.p.res[0];
+    if(res&&c.cost>res.cur){this.log(`Not enough ${res.name} (need ${c.cost}, have ${Math.floor(res.cur)})`,'sys');this.sel=null;this.render();return;}
+    s.p.hand=s.p.hand.filter(x=>x.uid!==c.uid);if(res)res.cur-=(c.cost||0);
+    this.fx(c,s.p,s.e,'pa');
+    if(c.type==='creature'){s.p.field.push({...c,exhausted:true});this.log(`Played ${c.emoji} ${c.name} to field.`,'pa');}
+    else{s.p.disc.push(c);this.log(`Cast ${c.emoji} ${c.name}.`,'pa');}
+    this.sel=null;this.chkWin();this.render();
+  },
+  fx(c,caster,opp,lt){
+    const ef=(c.effect||'').toLowerCase();
+    const vb=Cfg.get('verbose');
+    const dm=ef.match(/(\d+)\s*damage/);if(dm){opp.hp-=+dm[1];if(vb)this.log(`💥 ${dm[1]} damage!`,lt);}
+    const hm=ef.match(/heal.*?(\d+)|restore.*?(\d+)\s*hp|gain.*?(\d+)\s*hp/);
+    if(hm){const h=+(hm[1]||hm[2]||hm[3]);caster.hp=Math.min(caster.mhp,caster.hp+h);if(vb)this.log(`💚 Healed ${h}`,lt);}
+    const drm=ef.match(/draw\s*(\d+)/);if(drm){const n=+drm[1];for(let i=0;i<n&&caster.deck.length;i++)caster.hand.push(caster.deck.pop());if(vb)this.log(`🃏 Drew ${n}`,lt);}
+    const mm=ef.match(/gain\s*(\d+)\s*(mana|energy|essence|gold)/);if(mm&&caster.res[0])caster.res[0].cur=Math.min(caster.res[0].max||10,caster.res[0].cur+(+mm[1]));
+  },
+  drawCard(){
+    const s=this.gs;if(!s.isP||s.over)return;
+    if(!s.p.deck.length){this.log('Deck empty!','sys');return;}
+    if(s.p.hand.length>=(s.g.maxHandSize||7)){this.log('Hand full!','sys');return;}
+    const c=s.p.deck.pop();s.p.hand.push(c);this.log(`Drew: ${c.emoji} ${c.name}`,'pa');this.render();
+  },
+  attackSel(){
+    const s=this.gs;
+    if(!this.sel||!s.isP||s.over){this.log('Select a creature from your field first.','sys');return;}
+    const card=s.p.field.find(x=>x.uid===this.sel.uid);
+    if(!card){this.log('Play card to field first.','sys');return;}
+    if(card.exhausted){this.log(`${card.name} is exhausted.`,'sys');return;}
+    const atk=card.attack||1;
+    if(s.e.field.length>0){
+      const t=s.e.field[Math.floor(Math.random()*s.e.field.length)];
+      t.hp-=atk;card.hp-=(t.attack||1);
+      this.log(`${card.emoji} ${card.name} attacks ${t.emoji} ${t.name}!`,'pa');
+      if(t.hp<=0){s.e.field=s.e.field.filter(x=>x.uid!==t.uid);this.log(`💀 ${t.name} destroyed!`,'pa');}
+      if(card.hp<=0){s.p.field=s.p.field.filter(x=>x.uid!==card.uid);this.log(`💀 Your ${card.name} destroyed.`,'ea');}
+    }else{s.e.hp-=atk;this.log(`${card.emoji} attacks directly for ${atk}!`,'pa');}
+    card.exhausted=true;this.sel=null;this.chkWin();this.render();
+  },
+  async endTurn(){
+    const s=this.gs;if(!s.isP||s.over)return;
+    s.p.field.forEach(c=>c.exhausted=false);
+    const r=s.p.res[0];if(r)r.cur=Math.min(r.max||10,r.cur+(r.regenPerTurn||3));
+    s.isP=false;s.turn++;this.log(`--- Turn ${s.turn}: Opponent ---`,'sys');
+    this.sel=null;this.render();await this.aiTurn();
+  },
+  async aiTurn(){
+    const s=this.gs;const d=Cfg.get('delay');
+    const think=(m)=>{$('tstrip').className='ts show';if(m)$('tmsg').textContent=m;};
+    const unthink=()=>$('tstrip').className='ts';
+    think('Opponent drawing...');if(d)await sleep(550);
+    if(s.e.deck.length&&s.e.hand.length<(s.g.maxHandSize||7)){const c=s.e.deck.pop();s.e.hand.push(c);this.log('Opponent draws.','ea');}
+    const er=s.e.res[0];if(er)er.cur=Math.min(er.max||10,er.cur+(er.regenPerTurn||3));
+    if(d)await sleep(350);think('Opponent playing cards...');if(d)await sleep(450);
+    const strat=s.g.aiStrategy||'balanced';
+    const aff=s.e.hand.filter(c=>!er||c.cost<=er.cur).sort((a,b)=>strat==='aggressive'?b.attack-a.attack:b.cost-a.cost);
+    let played=0;
+    for(const c of aff){
+      if(played>=2)break;const idx=s.e.hand.findIndex(x=>x.uid===c.uid);if(idx<0)continue;
+      s.e.hand.splice(idx,1);if(er)er.cur-=(c.cost||0);
+      this.fx(c,s.e,s.p,'ea');
+      if(c.type==='creature'){s.e.field.push({...c,exhausted:false});this.log(`Opponent plays ${c.emoji} ${c.name}!`,'ea');}
+      else{s.e.disc.push(c);this.log(`Opponent casts ${c.emoji} ${c.name}!`,'ea');}
+      played++;if(d)await sleep(380);this.chkWin();if(s.over){unthink();return;}
+    }
+    think('Opponent attacking...');if(d)await sleep(550);
+    for(const att of[...s.e.field]){
+      if(att.exhausted)continue;const atk=att.attack||1;
+      const goF=s.p.field.length>0&&(strat==='defensive'||Math.random()>.35);
+      if(goF){
+        const t=s.p.field[Math.floor(Math.random()*s.p.field.length)];
+        t.hp-=atk;att.hp-=(t.attack||1);
+        this.log(`${att.emoji} ${att.name} attacks your ${t.emoji} ${t.name}!`,'ea');
+        if(t.hp<=0){s.p.field=s.p.field.filter(x=>x.uid!==t.uid);this.log(`💀 Your ${t.name} destroyed!`,'ea');}
+        if(att.hp<=0)s.e.field=s.e.field.filter(x=>x.uid!==att.uid);
+      }else{s.p.hp-=atk;this.log(`${att.emoji} attacks you for ${atk}!`,'ea');}
+      att.exhausted=true;if(d)await sleep(320);this.chkWin();if(s.over){unthink();return;}
+    }
+    unthink();if(d)await sleep(280);
+    s.isP=true;this.log(`--- Your turn (${er?er.name:'Resources'} refreshed) ---`,'sys');
+    if(Cfg.get('autodraw')&&s.p.deck.length&&s.p.hand.length<(s.g.maxHandSize||7)){const c=s.p.deck.pop();s.p.hand.push(c);this.log(`Auto-drew: ${c.emoji} ${c.name}`,'pa');}
+    this.render();
+  },
+  chkWin(){
+    const s=this.gs;if(s.over)return;
+    if(s.p.hp<=0){s.over=true;this.log('💀 You were defeated!','ea');this.showResult(false);}
+    else if(s.e.hp<=0){s.over=true;this.log('🏆 Victory!','win');this.showResult(true);}
+    this.render();
+  },
+  showResult(win){
+    $('wico').textContent=win?'🏆':'💀';$('wtit').textContent=win?'Victory!':'Defeated!';
+    $('wsub').textContent=win?`You won ${this.gs.g.title} in ${this.gs.turn} turns!`:`Opponent wins after ${this.gs.turn} turns. Try again!`;
+    $('ratesec').style.display=win?'block':'none';
+    $('wmo').classList.add('show');
+  },
+  rate(stars){
+    this.pendingRating=stars;
+    document.querySelectorAll('#mstars .star').forEach((el,i)=>el.classList.toggle('lit',i<stars));
+    if(Engine.game)Library.setRating(Engine.game.title,stars);
+  },
+  restart(){$('wmo').classList.remove('show');this.launch();},
+  quit(){if(!confirm('Quit game?'))return;$('wmo').classList.remove('show');$('gui').style.display='none';$('pempty').style.display='flex';},
+  log(msg,type){
+    const e=`<div class="le ${type||''}">${msg}</div>`;
+    ['logm','logd'].forEach(id=>{const el=$(id);if(el){el.insertAdjacentHTML('beforeend',e);el.scrollTop=el.scrollHeight;}});
+  },
+  toggleLog(){this.logOpen=!this.logOpen;$('ldr').classList.toggle('open',this.logOpen);$('larrow').textContent=this.logOpen?'▼':'▲';}
+};
+
+/* ══════════════════════════════════════
+   MODULE: DeckPresets
+══════════════════════════════════════ */
+const DECKS = [
+  // ── EUROPEAN SUITED ──────────────────────────────────────────────────
+  {
+    id:'french', region:'eu', name:'French Deck',
+    icon:'🥖', origin:'🇫🇷 France · 16th c.',
+    tagline:'The global standard — 52 cards, 4 suits, the world\'s most familiar deck.',
+    suits:[
+      {icon:'♠️',name:'Spades',   translation:'Piques',   count:13},
+      {icon:'♥️',name:'Hearts',   translation:'Cœurs',    count:13},
+      {icon:'♦️',name:'Diamonds', translation:'Carreaux', count:13},
+      {icon:'♣️',name:'Clubs',    translation:'Trèfles',  count:13},
+    ],
+    ranks:['A','2','3','4','5','6','7','8','9','10','J','Q','K'],
+    specials:['Joker (×2)'],
+    totalCards:52,
+    note:'The French deck is the basis for Poker, Bridge, Blackjack, Rummy and thousands of other games worldwide. Suits derive from German playing cards; the Joker was added in America for Euchre.',
+    deckContext:`Use a standard French 52-card deck (4 suits: ♠️ Spades, ♥️ Hearts, ♦️ Diamonds, ♣️ Clubs; ranks A,2–10,J,Q,K; optionally 2 Jokers). Design the game mechanics around these real card identities. Map card ranks to values (A=1 or 14, numbered cards face value, J=11, Q=12, K=13). Use suit interactions meaningfully. The game should feel at home using a real deck of cards.`
+  },
+  {
+    id:'spanish', region:'eu', name:'Spanish Deck',
+    icon:'🌹', origin:'🇪🇸 Spain · 15th c.',
+    tagline:'40 cards, four ancient suits — swords, cups, coins and clubs.',
+    suits:[
+      {icon:'⚔️',name:'Espadas',  translation:'Swords', count:10},
+      {icon:'🏆',name:'Copas',    translation:'Cups',   count:10},
+      {icon:'🪙',name:'Oros',     translation:'Coins',  count:10},
+      {icon:'🪵',name:'Bastos',   translation:'Clubs',  count:10},
+    ],
+    ranks:['1','2','3','4','5','6','7','Sota (J)','Caballo (Q)','Rey (K)'],
+    specials:['No 8s or 9s in 40-card variant'],
+    totalCards:40,
+    note:'The Spanish baraja is used across Latin America and Spain for games like Mus, Brisca, Tute, and Chinchón. The face cards are Sota (knave), Caballo (knight on horseback), and Rey (king).',
+    deckContext:`Use a Spanish 40-card baraja deck (4 suits: ⚔️ Espadas/Swords, 🏆 Copas/Cups, 🪙 Oros/Coins, 🪵 Bastos/Clubs; ranks 1–7, Sota/J, Caballo/Q, Rey/K — no 8s or 9s). Incorporate the traditional suit symbolism: swords = conflict, cups = emotion/fate, coins = wealth, clubs = labor/strength. Design mechanics that reflect the deck's Mediterranean origins.`
+  },
+  {
+    id:'german', region:'eu', name:'German Deck',
+    icon:'🦅', origin:'🇩🇪 Germany · 15th c.',
+    tagline:'Leaves, hearts, bells and acorns — the robust deck of Central Europe.',
+    suits:[
+      {icon:'🍃',name:'Laub',    translation:'Leaves',  count:8},
+      {icon:'❤️',name:'Herz',    translation:'Hearts',  count:8},
+      {icon:'🔔',name:'Schellen',translation:'Bells',   count:8},
+      {icon:'🌰',name:'Eichel',  translation:'Acorns',  count:8},
+    ],
+    ranks:['6','7','8','9','10','Unter (J)','Ober (Q)','König (K)','Ass (A)'],
+    specials:['Weli (6 of Bells — wild in some games)'],
+    totalCards:32,
+    note:'Used for Schafkopf, Doppelkopf, Skat, and Watten. The German deck has no queens — instead it has Unter (lower valet) and Ober (upper valet). Regional Bavarian variants use different imagery.',
+    deckContext:`Use a German 32-card deck (4 suits: 🍃 Laub/Leaves, ❤️ Herz/Hearts, 🔔 Schellen/Bells, 🌰 Eichel/Acorns; ranks 6,7,8,9,10, Unter/J, Ober/Q, König/K, Ass/A). Note there are no queens — Unter and Ober are the two face cards below the King. The Weli (6 of Bells) can serve as a wild card. Design game mechanics around trick-taking or hand-management traditions of Central Europe.`
+  },
+  {
+    id:'italian', region:'eu', name:'Italian Deck',
+    icon:'🍕', origin:'🇮🇹 Italy · 14th c.',
+    tagline:'Swords, cups, coins and batons — the oldest European suited deck still in use.',
+    suits:[
+      {icon:'⚔️',name:'Spade',   translation:'Swords', count:10},
+      {icon:'🏆',name:'Coppe',   translation:'Cups',   count:10},
+      {icon:'🪙',name:'Denari',  translation:'Coins',  count:10},
+      {icon:'🪄',name:'Bastoni', translation:'Batons', count:10},
+    ],
+    ranks:['1','2','3','4','5','6','7','Fante (J)','Cavallo (Q)','Re (K)'],
+    specials:['Primiera scoring (7s are highest in some games)'],
+    totalCards:40,
+    note:'Regional variants include Napoletane, Piacentine, Bergamasche and Sarde. Used for Briscola, Scopa, Scopone, Tressette, and Primiera — games dating back to the Renaissance.',
+    deckContext:`Use an Italian 40-card deck (4 suits: ⚔️ Spade/Swords, 🏆 Coppe/Cups, 🪙 Denari/Coins, 🪄 Bastoni/Batons; ranks 1–7, Fante/Knave, Cavallo/Knight, Re/King). In many Italian games 3s and 2s rank above 1s which are above face cards. The 7 of Coins (Settebello) is often the most valuable card. Design around the rich tradition of Italian trick-taking or point-capture games.`
+  },
+  {
+    id:'swiss', region:'eu', name:'Swiss Deck',
+    icon:'🏔️', origin:'🇨🇭 Switzerland · 15th c.',
+    tagline:'Shields, roses, bells and acorns — a mountain nation\'s distinctive deck.',
+    suits:[
+      {icon:'🛡️',name:'Schilten', translation:'Shields', count:9},
+      {icon:'🌹',name:'Rosen',    translation:'Roses',   count:9},
+      {icon:'🔔',name:'Schellen', translation:'Bells',   count:9},
+      {icon:'🌰',name:'Eicheln',  translation:'Acorns',  count:9},
+    ],
+    ranks:['6','7','8','9','Banner (10)','Unter','Ober','König','Ass'],
+    specials:['Banner replaces 10 with a flag-bearer image'],
+    totalCards:36,
+    note:'The Swiss-German deck is used for Jass — Switzerland\'s national card game — as well as Differenzler and Schieber. The Banner (flag-bearer) card replaces the 10 and is a distinctive Swiss feature.',
+    deckContext:`Use a Swiss 36-card Jass deck (4 suits: 🛡️ Schilten/Shields, 🌹 Rosen/Roses, 🔔 Schellen/Bells, 🌰 Eicheln/Acorns; ranks 6,7,8,9, Banner/10-flag, Unter, Ober, König, Ass). The Banner replaces the 10 with a distinctive flag card. In Jass, the Jack (Unter) of trumps is the highest card (Buur), followed by the 9 (Nel). Design a game inspired by Swiss alpine tradition.`
+  },
+  // ── EAST ASIAN ──────────────────────────────────────────────────────
+  {
+    id:'hanafuda', region:'asia', name:'Hanafuda',
+    icon:'🌸', origin:'🇯🇵 Japan · 18th c.',
+    tagline:'48 flower cards across 12 months — a calendar of nature in your hands.',
+    suits:[
+      {icon:'🌸',name:'January',   translation:'Pine & Crane',      count:4},
+      {icon:'🌺',name:'February',  translation:'Plum & Bush Warbler',count:4},
+      {icon:'🌸',name:'March',     translation:'Cherry Blossom',     count:4},
+      {icon:'🌧️',name:'April',     translation:'Wisteria & Cuckoo',  count:4},
+      {icon:'🌿',name:'May',       translation:'Iris & Bridge',      count:4},
+      {icon:'🦋',name:'June',      translation:'Peony & Butterfly',  count:4},
+      {icon:'🍃',name:'July',      translation:'Bush Clover & Boar', count:4},
+      {icon:'🌕',name:'August',    translation:'Pampas & Moon',      count:4},
+      {icon:'🍶',name:'September', translation:'Chrysanthemum & Cup',count:4},
+      {icon:'🍁',name:'October',   translation:'Maple & Deer',       count:4},
+      {icon:'⚡',name:'November',  translation:'Willow & Swallow',   count:4},
+      {icon:'❄️',name:'December',  translation:'Paulownia & Phoenix',count:4},
+    ],
+    ranks:['Kasu (plain, ×2 per suit)','Tanzaku (ribbon, ×1)','Tane (animal, ×1)','Hikari (bright, rare)'],
+    specials:['Oi-Chō-Kabu scoring','Koi-Koi yaku combinations','Rain man (November bright)'],
+    totalCards:48,
+    note:'Hanafuda ("flower cards") arrived in Japan after Portuguese playing cards were banned. Each of the 12 suits represents a month and its seasonal flower. Used for Koi-Koi, Hachi-Hachi, and Oicho-Kabu.',
+    deckContext:`Use a Hanafuda deck (48 cards, 12 suits/months of 4 cards each: January 🌸 Pine, February 🌺 Plum, March 🌸 Cherry, April 🌧️ Wisteria, May 🌿 Iris, June 🦋 Peony, July 🍃 Bush Clover, August 🌕 Pampas/Moon, September 🍶 Chrysanthemum, October 🍁 Maple, November ⚡ Willow, December ❄️ Paulownia). Card tiers within each suit: Kasu/plain (×2, value 1), Tanzaku/ribbon (×1, value 5), Tane/animal (×1, value 10), Hikari/bright (rare, value 20). Game scoring should use yaku (combination sets) and seasonal matching. Evoke Japanese aesthetics and nature symbolism.`
+  },
+  {
+    id:'hwatu', region:'asia', name:'Hwatu (화투)',
+    icon:'🎴', origin:'🇰🇷 Korea · 19th c.',
+    tagline:'Korea\'s take on Hanafuda — bold, colourful, built for Go-Stop.',
+    suits:[
+      {icon:'🌲',name:'January',  translation:'Pine',        count:4},
+      {icon:'🌸',name:'February', translation:'Plum',        count:4},
+      {icon:'🌿',name:'March',    translation:'Cherry',      count:4},
+      {icon:'🌊',name:'April',    translation:'Wisteria',    count:4},
+      {icon:'💐',name:'May',      translation:'Orchid',      count:4},
+      {icon:'🦋',name:'June',     translation:'Peony',       count:4},
+      {icon:'🌾',name:'July',     translation:'Bush Clover', count:4},
+      {icon:'🌙',name:'August',   translation:'Eulalia',     count:4},
+      {icon:'🍃',name:'September',translation:'Chrysanthemum',count:4},
+      {icon:'🍂',name:'October',  translation:'Maple',       count:4},
+      {icon:'🌧️',name:'November', translation:'Paulownia',   count:4},
+      {icon:'❄️',name:'December', translation:'Bamboo',      count:4},
+    ],
+    ranks:['Pi (plain ×2)','Ssang-pi (double plain ×1)','Gukjin/Animal (×1)','Gwang/Bright (×1, rare)'],
+    specials:['Joker Ssang-pi (bomb card)','Go-Stop decision mechanic'],
+    totalCards:48,
+    note:'Hwatu (화투, "flower fight") is the Korean adaptation of Japanese Hanafuda, introduced during the late 19th century. It\'s the basis for Go-Stop (고스톱) and Seotda (섰다), Korea\'s most popular card games.',
+    deckContext:`Use a Korean Hwatu deck (48 cards, 12 months/suits of 4 cards: Jan 🌲 Pine, Feb 🌸 Plum, Mar 🌿 Cherry, Apr 🌊 Wisteria, May 💐 Orchid, Jun 🦋 Peony, Jul 🌾 Bush Clover, Aug 🌙 Eulalia, Sep 🍃 Chrysanthemum, Oct 🍂 Maple, Nov 🌧️ Paulownia, Dec ❄️ Bamboo). Each suit has Pi/plain cards (value 1), one Animal/Gukjin (value 10), and one Gwang/Bright (value 20). Special mechanic: players decide to Go (keep playing) or Stop (take winnings) after each scoring combination. Design the game around this tension.`
+  },
+  {
+    id:'mahjong', region:'asia', name:'Mahjong Tiles',
+    icon:'🀄', origin:'🇨🇳 China · 19th c.',
+    tagline:'136 tiles — bamboo, circles, characters and honours — for the world\'s great tile game.',
+    suits:[
+      {icon:'🎋',name:'Bamboo',    translation:'Suō (索)',   count:36},
+      {icon:'⭕',name:'Circles',   translation:'Tǒng (筒)',  count:36},
+      {icon:'漢',name:'Characters',translation:'Wàn (萬)',   count:36},
+      {icon:'🌬️',name:'Winds',     translation:'Fēng (風)',  count:16},
+      {icon:'🐉',name:'Dragons',   translation:'Zhōng (中)', count:12},
+    ],
+    ranks:['1–9 (Bamboo)','1–9 (Circles)','1–9 (Characters)','East/South/West/North (Winds)','Red/Green/White (Dragons)'],
+    specials:['Flower tiles (×8, bonus)','Joker variants'],
+    totalCards:136,
+    note:'Standard Mahjong uses 136 tiles: 3 suited suits of 9 tiles each (×4 copies), 4 wind tiles (×4), 3 dragon tiles (×4). Flower/season bonus tiles are optional. Gameplay involves drawing, discarding, and forming winning sets (melds).',
+    deckContext:`Use a Mahjong-inspired card deck (adapt tiles as cards). Suits: 🎋 Bamboo 1–9, ⭕ Circles 1–9, 漢 Characters 1–9, 🌬️ Winds (East/South/West/North), 🐉 Dragons (Red/Green/White). Each number card exists in copies of 2–4. Winning sets: Pung (3 of a kind), Chow (3 consecutive in a suit), Kong (4 of a kind), Pair. Design a hand-building game where players draw/discard to complete a winning hand of 14 cards. Include special scoring for rare combinations (Mahjong yaku).`
+  },
+  // ── INTERNATIONAL & TAROT ────────────────────────────────────────────
+  {
+    id:'tarot', region:'intl', name:'Tarot Deck',
+    icon:'🔮', origin:'🌍 Europe · 15th c.',
+    tagline:'78 cards — the Major Arcana, Minor Arcana, and the Fool\'s eternal journey.',
+    suits:[
+      {icon:'⚔️',name:'Swords',  translation:'Air / Conflict',count:14},
+      {icon:'🏆',name:'Cups',    translation:'Water / Emotion',count:14},
+      {icon:'🪄',name:'Wands',   translation:'Fire / Ambition',count:14},
+      {icon:'🪙',name:'Pentacles',translation:'Earth / Material',count:14},
+    ],
+    ranks:['Ace','2–10','Page (J)','Knight','Queen','King','22 Major Arcana trumps'],
+    specials:['The Fool (0)','The World (XXI — highest trump)','The Wheel of Fortune'],
+    totalCards:78,
+    note:'The Tarot de Marseille (French) is the game-playing ancestor of modern esoteric tarot. Tarocchi and Tarock are still played across Europe. The 22 Major Arcana serve as permanent trump cards that beat all suited cards.',
+    deckContext:`Use a full 78-card Tarot deck: 4 suits (⚔️ Swords, 🏆 Cups, 🪄 Wands, 🪙 Pentacles) each with 14 cards (Ace, 2–10, Page/J, Knight, Queen, King); plus 22 Major Arcana trump cards (0 The Fool, I The Magician, II High Priestess, III Empress, IV Emperor, V Hierophant, VI Lovers, VII Chariot, VIII Strength, IX Hermit, X Wheel of Fortune, XI Justice, XII Hanged Man, XIII Death, XIV Temperance, XV Devil, XVI Tower, XVII Star, XVIII Moon, XIX Sun, XX Judgement, XXI The World). Major Arcana beat all suited cards; higher number beats lower. The Fool is wild. Design a trick-taking or hand-building game that meaningfully uses both the Major and Minor Arcana.`
+  },
+  {
+    id:'uno', region:'intl', name:'UNO-Style Deck',
+    icon:'🎨', origin:'🇺🇸 USA · 1971',
+    tagline:'Colour-coded, action-packed — the definitive modern family card deck.',
+    suits:[
+      {icon:'🔴',name:'Red',   translation:'',count:25},
+      {icon:'🔵',name:'Blue',  translation:'',count:25},
+      {icon:'🟢',name:'Green', translation:'',count:25},
+      {icon:'🟡',name:'Yellow',translation:'',count:25},
+    ],
+    ranks:['0 (×1)','1–9 (×2 each)','Skip','Reverse','Draw Two','Wild','Wild Draw Four'],
+    specials:['Wild (×4, choose colour)','Wild Draw Four (×4, most powerful)','Colour-blind accessible variants'],
+    totalCards:108,
+    note:'UNO (1971) is one of the best-selling card games of all time. Its colour+number structure with action cards makes it infinitely adaptable. The core loop — play a matching card or draw — is simple yet generates enormous drama.',
+    deckContext:`Use an UNO-style 108-card deck: 4 colours (🔴 Red, 🔵 Blue, 🟢 Green, 🟡 Yellow). Each colour has: 0 (×1), 1–9 (×2 each), Skip (×2), Reverse (×2), Draw Two (×2). Plus 4 Wild cards and 4 Wild Draw Four cards. Core rule: play a card matching the colour OR number of the previous card. Design a game using this structure — focus on hand depletion, action card combos, and special ability interactions.`
+  },
+  {
+    id:'poker', region:'intl', name:'Poker Chip Deck',
+    icon:'🪙', origin:'🌍 International · 19th c.',
+    tagline:'52 cards built for bluffing, betting, and reading your opponent.',
+    suits:[
+      {icon:'♠️',name:'Spades',  translation:'High suit', count:13},
+      {icon:'♥️',name:'Hearts',  translation:'',          count:13},
+      {icon:'♦️',name:'Diamonds',translation:'',          count:13},
+      {icon:'♣️',name:'Clubs',   translation:'Low suit',  count:13},
+    ],
+    ranks:['2 (low)','3','4','5','6','7','8','9','10','J','Q','K','A (high)'],
+    specials:['Royal Flush','Straight Flush','Four of a Kind','Full House','Bluff / betting mechanic'],
+    totalCards:52,
+    note:'Poker hand rankings (Royal Flush → High Card) define card power in a globally understood hierarchy. Adding betting chips creates a meta-game of psychology and risk. Suited and unsuited hands have different values.',
+    deckContext:`Use a standard 52-card deck optimised for Poker-style hand-ranking games (♠️ Spades, ♥️ Hearts, ♦️ Diamonds, ♣️ Clubs; ranks 2–A). Card power hierarchy: Royal Flush > Straight Flush > Four of a Kind > Full House > Flush > Straight > Three of a Kind > Two Pair > Pair > High Card. Include a betting/bluffing resource (chips/tokens). Design a game where players build the best 5-card hand, with psychological bluffing as a core mechanic.`
+  },
+  {
+    id:'karuta', region:'asia', name:'Hyakunin Isshu Karuta',
+    icon:'📜', origin:'🇯🇵 Japan · 13th c.',
+    tagline:'100 classical poems split across reader and grabber cards — Japan\'s poetry card game.',
+    suits:[
+      {icon:'📖',name:'Yomifuda', translation:'Reader cards (torifuda)',  count:100},
+      {icon:'🖼️',name:'Torifuda', translation:'Grabber cards (efuda)',    count:100},
+    ],
+    ranks:['Poem 1–100 (matched pairs)'],
+    specials:['First syllable recognition','Competitive memorisation','Team variants (Chihayafuru style)'],
+    totalCards:200,
+    note:'Uta-garuta (poetry karuta) is based on the Hyakunin Isshu anthology compiled by Fujiwara no Teika (~1235). A reader recites the first half of a poem; players race to grab the card showing the second half. Chihayafuru (2016 anime/film) popularised competitive karuta globally.',
+    deckContext:`Use a Karuta-inspired deck of 100 matched card pairs: each poem/verse split into a clue card and an answer card. Suits represent poetic themes: 🌸 Nature (sakura, moon, seasons), ⚔️ Love & Longing (koi, separation), 🌊 Transience (impermanence, mono no aware), 👑 Court Life (imperial, rank, ceremony). Mechanic: one player reveals clue cards; others race to match the answer. Design a competitive memory/speed game with special bonus cards for rare sequences. Evoke the elegance of classical Japanese aesthetics.`
+  },
+];
+
+const DeckPresets = {
+  selected: null,
+  pendingDetail: null,
+
+  init() {
+    const regions = { eu: 'dscroll-eu', asia: 'dscroll-asia', intl: 'dscroll-intl' };
+    for (const [reg, elId] of Object.entries(regions)) {
+      const el = $(elId); if (!el) continue;
+      DECKS.filter(d => d.region === reg).forEach(deck => {
+        const btn = document.createElement('button');
+        btn.className = 'dck'; btn.id = 'dck-' + deck.id;
+        btn.innerHTML = `<span class="dck-ico">${deck.icon}</span><div class="dck-name">${deck.name}</div><div class="dck-sub">${deck.totalCards} cards</div>`;
+        btn.onclick = () => this.showDetail(deck.id);
+        el.appendChild(btn);
+      });
+    }
+  },
+
+  showDetail(id) {
+    const deck = DECKS.find(d => d.id === id); if (!deck) return;
+    this.pendingDetail = deck;
+    $('d-ico').textContent = deck.icon;
+    $('d-name').textContent = deck.name;
+    $('d-tagline').textContent = deck.tagline;
+    $('d-origin').innerHTML = deck.origin + ` &nbsp;·&nbsp; ${deck.totalCards} cards`;
+
+    // Suits — up to 6 shown
+    const sg = $('d-suits');
+    const suitsToShow = deck.suits.slice(0, 8);
+    const cols = suitsToShow.length <= 4 ? suitsToShow.length : 4;
+    sg.style.gridTemplateColumns = `repeat(${Math.min(cols, 4)}, 1fr)`;
+    sg.innerHTML = suitsToShow.map(s => `
+      <div class="suit-card">
+        <span class="sico">${s.icon}</span>
+        <div class="snm">${s.name}</div>
+        ${s.translation ? `<div class="str">${s.translation}</div>` : ''}
+        <div class="str">${s.count} cards</div>
+      </div>`).join('') + (deck.suits.length > 8 ? `<div class="suit-card" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.7rem;">+${deck.suits.length - 8} more</div>` : '');
+
+    // Ranks
+    $('d-ranks').innerHTML = deck.ranks.map(r => `<div class="rank-pip">${r}</div>`).join('') +
+      (deck.specials || []).map(s => `<div class="rank-pip special">★ ${s}</div>`).join('');
+
+    $('d-note').textContent = deck.note;
+    $('dmo').classList.add('show');
+  },
+
+  closeDetail() { $('dmo').classList.remove('show'); this.pendingDetail = null; },
+
+  confirmSelect() {
+    const deck = this.pendingDetail; if (!deck) return;
+    this.select(deck.id);
+    this.closeDetail();
+  },
+
+  select(id) {
+    const deck = DECKS.find(d => d.id === id); if (!deck) return;
+    // Deselect previous
+    if (this.selected) { const prev = $('dck-' + this.selected); if (prev) prev.classList.remove('sel'); }
+    this.selected = id;
+    const btn = $('dck-' + id); if (btn) btn.classList.add('sel');
+    $('clrdeck').style.display = 'inline-flex';
+    // Append deck hint to prompt if empty or doesn't mention the deck
+    const gp = $('gp');
+    const hint = `[Using ${deck.name}] `;
+    if (!gp.value.startsWith('[Using')) gp.value = hint + gp.value;
+    else gp.value = hint + gp.value.replace(/^\[Using[^\]]+\]\s*/,'');
+    Engine.onInput();
+  },
+
+  clear() {
+    if (this.selected) { const b = $('dck-' + this.selected); if (b) b.classList.remove('sel'); }
+    this.selected = null;
+    $('clrdeck').style.display = 'none';
+    const gp = $('gp');
+    gp.value = gp.value.replace(/^\[Using[^\]]+\]\s*/,'');
+    Engine.onInput();
+  },
+
+  getContext() {
+    if (!this.selected) return '';
+    const deck = DECKS.find(d => d.id === this.selected);
+    return deck ? '\n\nBASE DECK CONSTRAINT:\n' + deck.deckContext : '';
+  }
+};
+
+
+(function(){LLMConfig.load();Cfg.load();Library.load();Library.render();DeckPresets.init();})();
+</script>
+</body>
+</html>
