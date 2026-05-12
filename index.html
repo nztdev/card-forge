@@ -469,44 +469,56 @@ a{color:var(--acc2);}
 .ilogo span { color:var(--acc2); }
 .idecks { display:flex;gap:10px;justify-content:center;margin:.9rem 0 .2rem;font-size:1.9rem;opacity:0;animation:iFan .7s .2s ease forwards; }
 @keyframes iFan{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Tap zone sits behind slide text, above particles */
+#itapzone {
+  position:absolute;inset:0;z-index:2;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
 </style>
 </head>
 <body>
 
 <!-- ══════════ INTRO SCREEN ══════════ -->
-<div id="intro" onclick="Intro.advance()" ontouchend="Intro.advance()">
+<div id="intro">
+  <!-- Floating particles -->
   <div class="ibg" id="ibg"></div>
 
-  <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;">
+  <!-- Full-screen tap zone (sits behind slide content) -->
+  <div id="itapzone"></div>
+
+  <!-- Slide content -->
+  <div style="position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;pointer-events:none;">
     <div class="islides" id="islides">
 
       <!-- Slide 0 -->
       <div class="islide vis" id="is0">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">Tired of the same<br>old card games?</div>
         <div class="isub">Millions of decks. The same dozen rules.</div>
-        <div class="itap">Tap to continue</div>
+        <div class="itap">Tap anywhere to continue</div>
       </div>
 
       <!-- Slide 1 -->
       <div class="islide" id="is1">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">What if you could<br>invent your own?</div>
         <div class="isub">Any theme. Any rules. Any deck — from Hanafuda to Tarot.</div>
-        <div class="itap">Tap to continue</div>
+        <div class="itap">Tap anywhere to continue</div>
       </div>
 
       <!-- Slide 2 -->
       <div class="islide" id="is2">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">Just describe it.<br>AI does the rest.</div>
         <div class="isub">Generate a complete, playable card game from a single sentence. Then actually play it.</div>
-        <div class="itap">Tap to continue</div>
+        <div class="itap">Tap anywhere to continue</div>
       </div>
 
-      <!-- Slide 3 — final card -->
+      <!-- Slide 3 — final -->
       <div class="islide" id="is3">
         <div class="ilogo">Card<span>Forge</span></div>
         <div class="idecks">🌸 ♠️ 🀄 🔮 🦅 ⚔️</div>
         <div class="isub" style="font-size:.8rem;margin-top:.3rem;">Powered by Claude &amp; Gemini · 13 real-world deck presets</div>
-        <button class="icta" onclick="Intro.finish(event)">Enter CardForge →</button>
+        <!-- CTA needs pointer-events back since parent is none -->
+        <button class="icta" style="pointer-events:auto;" id="ictabtn">Enter CardForge →</button>
       </div>
 
     </div>
@@ -1596,9 +1608,13 @@ const Intro = {
   step: 0,
   total: 4,
   done: false,
+  busy: false,          // debounce guard — prevents double-fire
+  touchStartY: 0,
+  touchStartX: 0,
   EMOJIS: ['🌸','♠️','🀄','🔮','🦅','⚔️','🃏','🎴','♥️','🌹','🔔','🌰','♦️','♣️','🏆','🪙','📜','🎋','⭕'],
 
   init() {
+    // Spawn floating particles
     const bg = $('ibg');
     if (!bg) return;
     this.EMOJIS.forEach((em, i) => {
@@ -1611,23 +1627,67 @@ const Intro = {
       p.style.fontSize = (1.1 + (i % 3) * 0.5) + 'rem';
       bg.appendChild(p);
     });
+
+    // Tap zone — touchend only (preventDefault stops the ghost click)
+    const zone = $('itapzone');
+    if (zone) {
+      zone.addEventListener('touchstart', e => {
+        this.touchStartX = e.touches[0].clientX;
+        this.touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      zone.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - this.touchStartX;
+        const dy = e.changedTouches[0].clientY - this.touchStartY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        e.preventDefault(); // kill synthetic click
+        if (dist < 12) this.advance(); // tap (not a swipe)
+      }, { passive: false });
+
+      // Mouse click fallback for desktop
+      zone.addEventListener('click', () => this.advance());
+    }
+
+    // CTA button — pointer-events:auto so it's tappable despite parent being none
+    const cta = $('ictabtn');
+    if (cta) {
+      cta.addEventListener('touchend', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.finish();
+      }, { passive: false });
+      cta.addEventListener('click', e => {
+        e.stopPropagation();
+        this.finish();
+      });
+    }
   },
 
   advance() {
-    if (this.done) return;
-    if (this.step >= this.total - 1) return;
+    if (this.done || this.busy) return;
+    if (this.step >= this.total - 1) return; // slide 3 uses CTA button
+
+    this.busy = true;
+
     const cur = $('is' + this.step);
     const nxt = $('is' + (this.step + 1));
-    if (!cur || !nxt) return;
+    if (!cur || !nxt) { this.busy = false; return; }
+
+    // Exit current
     cur.classList.remove('vis');
     cur.classList.add('out');
-    setTimeout(() => cur.classList.remove('out'), 600);
-    setTimeout(() => nxt.classList.add('vis'), 80);
-    this.step++;
+
+    // Enter next after a brief offset so they never overlap
+    setTimeout(() => {
+      cur.classList.remove('out');
+      nxt.classList.add('vis');
+      this.step++;
+      // Release debounce after transition completes
+      setTimeout(() => { this.busy = false; }, 620);
+    }, 300);
   },
 
-  finish(e) {
-    if (e) e.stopPropagation();
+  finish() {
     if (this.done) return;
     this.done = true;
     const intro = $('intro');
