@@ -39,15 +39,15 @@
   --fm: 'DM Mono', monospace;
 }
 html,body{height:100%;}
-body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden;font-size:15px;}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
 button{font-family:var(--fb);cursor:pointer;}
 input,textarea,select{font-family:var(--fb);}
 a{color:var(--acc2);}
 
 /* ═══════════════════════════════════════════
-   APP SHELL
+   APP SHELL — mobile-first (natural scroll)
 ═══════════════════════════════════════════ */
-#app{display:flex;flex-direction:column;height:100vh;}
+#app{display:flex;flex-direction:column;min-height:100vh;}
 
 /* TOP BAR */
 .topbar{
@@ -56,6 +56,7 @@ a{color:var(--acc2);}
   border-bottom:1px solid var(--border);
   background:rgba(8,9,13,0.97);backdrop-filter:blur(16px);
   z-index:100;
+  position:sticky;top:0; /* stays visible while page scrolls naturally */
 }
 .brand{font-family:var(--fd);font-size:1.6rem;letter-spacing:.06em;display:flex;align-items:center;gap:6px;}
 .brand-dot{color:var(--acc2);}
@@ -71,10 +72,11 @@ a{color:var(--acc2);}
 .dg{background:var(--gemini);}
 .dn{background:var(--red);}
 
-/* BOTTOM NAV */
+/* BOTTOM NAV — sticky to bottom on mobile */
 .nav{
   display:flex;background:var(--s1);
-  border-top:1px solid var(--border);z-index:50;flex-shrink:0;
+  border-top:1px solid var(--border);z-index:50;
+  position:sticky;bottom:0; /* sticks to bottom of viewport as page scrolls */
 }
 .ni{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
@@ -95,9 +97,9 @@ a{color:var(--acc2);}
   font-size:.5rem;display:flex;align-items:center;justify-content:center;font-weight:700;
 }
 
-/* CONTENT */
-.content{flex:1;overflow:hidden;position:relative;min-height:0;}
-.panel{display:none;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+/* CONTENT — natural height on mobile, panels scroll with the page */
+.content{flex:1;position:relative;}
+.panel{display:none;min-height:50vh;}
 .panel.active{display:block;}
 
 /* ═══════════════════════════════════════════
@@ -186,11 +188,14 @@ a{color:var(--acc2);}
 /* ═══════════════════════════════════════════
    PLAY PANEL
 ═══════════════════════════════════════════ */
-.pe{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;color:var(--muted);padding:2rem;text-align:center;}
+.pe{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;color:var(--muted);padding:2rem;text-align:center;}
 .pe .big{font-size:3rem;opacity:.2;}
 .pe h2{font-family:var(--fd);font-size:1.45rem;color:var(--text);opacity:.4;}
 
-.gui{display:flex;flex-direction:column;height:100%;}
+/* Mobile: natural height so the page scrolls */
+.gui{display:flex;flex-direction:column;min-height:100vh;}
+
+/* Desktop overrides in media query */
 .gtb{padding:.65rem 1rem;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .gtb h2{font-family:var(--fd);font-size:1.15rem;letter-spacing:.04em;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tp{border-radius:20px;padding:4px 11px;font-size:.68rem;font-weight:700;white-space:nowrap;flex-shrink:0;}
@@ -203,7 +208,7 @@ a{color:var(--acc2);}
 .td span:nth-child(2){animation-delay:.2s}.td span:nth-child(3){animation-delay:.4s}
 @keyframes dp{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
 
-.arena{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.75rem;min-height:0;}
+.arena{padding:.75rem 1rem;display:flex;flex-direction:column;gap:.75rem;}
 .ph{display:flex;align-items:center;gap:9px;}
 .hpw{flex:1;}
 .hpr{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
@@ -365,14 +370,20 @@ a{color:var(--acc2);}
 /* ═══════════════════════════════════════════
    DESKTOP ≥640px
 ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   DESKTOP ≥640px — restore contained layout
+═══════════════════════════════════════════ */
 @media(min-width:640px){
-  body{overflow:hidden;}
-  #app{flex-direction:row;}
+  html,body{overflow:hidden;height:100%;}
+  #app{flex-direction:row;height:100vh;overflow:hidden;}
   .topbar{display:none;}
+
+  /* Side nav */
   .nav{
     flex-direction:column;width:70px;flex-shrink:0;
     border-top:none;border-right:1px solid var(--border);
     padding:1rem 0;justify-content:flex-start;gap:3px;
+    position:static; /* undo sticky */
   }
   .nav::before{
     content:'CF';font-family:var(--fd);font-size:1.25rem;
@@ -381,20 +392,31 @@ a{color:var(--acc2);}
   }
   .ni{padding:11px 4px;border-radius:0;}
   .ni.active::before{top:20%;bottom:20%;left:0;right:auto;width:2px;height:auto;border-radius:0 2px 2px 0;}
-  .content{flex:1;}
+
+  /* Column wrapper */
+  .content{flex:1;overflow:hidden;min-height:0;}
+  .panel{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .panel.active{display:block;}
+
   .pp{padding:1.6rem 2rem;max-width:760px;margin:0 auto;}
   .lmo{align-items:center;}
   .lsh{border-radius:var(--r3);margin:auto;}
+
+  /* Game UI fills the panel on desktop */
+  .gui{min-height:0;height:100%;}
+  .pe{height:100%;min-height:0;}
+  #panel-play{overflow:hidden;}
 }
 
 /* WIDE GAME LAYOUT ≥900px */
 @media(min-width:900px){
   .gui{flex-direction:row;}
   .gmain{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .arena{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;}
   .gsd{width:255px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--s1);}
   .lt,.ld{display:none;}
   .gsd .sdt{padding:.7rem;border-bottom:1px solid var(--border);font-size:.62rem;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;}
-  .gsd .sla{flex:1;overflow-y:auto;padding:.65rem;display:flex;flex-direction:column;gap:4px;}
+  .gsd .sla{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.65rem;display:flex;flex-direction:column;gap:4px;}
   .gsd .sba{padding:.7rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:5px;}
   .gsd .sba .btn{font-size:.75rem;}
 }
@@ -495,21 +517,21 @@ a{color:var(--acc2);}
       <div class="islide vis" id="is0">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">Tired of the same<br>old card games?</div>
         <div class="isub">Millions of decks. The same dozen rules.</div>
-        <div class="itap">Tap anywhere to continue /Here to skip/</div>
+        <div class="itap">Tap anywhere to continue</div>
       </div>
 
       <!-- Slide 1 -->
       <div class="islide" id="is1">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">What if you could<br>invent your own?</div>
         <div class="isub">Any theme. Any rules. Any deck — from Hanafuda to Tarot.</div>
-        <div class="itap">Tap anywhere to continue /Here to skip/</div>
+        <div class="itap">Tap anywhere to continue</div>
       </div>
 
       <!-- Slide 2 -->
       <div class="islide" id="is2">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">Just describe it.<br>AI does the rest.</div>
         <div class="isub">Generate a complete, playable card game from a single sentence. Then actually play it.</div>
-        <div class="itap">Tap anywhere to continue /Here to skip/</div>
+        <div class="itap">Tap anywhere to continue</div>
       </div>
 
       <!-- Slide 3 — final -->
@@ -786,7 +808,7 @@ a{color:var(--acc2);}
     <div class="fg"><label class="flt">API Key</label><input type="password" class="fi" id="gkey" placeholder="AIza..." oninput="LLMConfig.saveKeys()"><div class="kw">→ <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a></div></div>
     <div class="fg"><label class="flt">Model</label>
       <select class="fsel" id="gmodel" onchange="LLMConfig.saveKeys()">
-        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</option>
         <option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash Preview</option>
         <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
       </select>
@@ -900,10 +922,10 @@ const App={
    MODULE: LLMConfig
 ══════════════════════════════════════ */
 const LLMConfig={
-  prov:'claude',ck:'',gk:'',cm:'claude-sonnet-4-20250514',gm:'gemini-2.5-flash',
+  prov:'claude',ck:'',gk:'',cm:'claude-sonnet-4-20250514',gm:'gemini-2.0-flash',
   load(){
     this.prov=LS('cp','claude');this.ck=LS('cck','');this.gk=LS('cgk','');
-    this.cm=LS('ccm','claude-sonnet-4-20250514');this.gm=LS('cgm','gemini-2.5-flash');
+    this.cm=LS('ccm','claude-sonnet-4-20250514');this.gm=LS('cgm','gemini-2.0-flash');
     if($('ckey'))  $('ckey').value=this.ck;
     if($('gkey'))  $('gkey').value=this.gk;
     if($('cmodel'))$('cmodel').value=this.cm;
@@ -1701,6 +1723,108 @@ const Intro = {
   LLMConfig.load();
   Cfg.load();
   Library.load();
+
+  // Seed two starter games if library is empty
+  if (Library.data.length === 0) {
+    const starters = [
+      {
+        title: "Realm of Shadows",
+        tagline: "Command dark legions and ancient heroes in a battle for the fate of the realm.",
+        theme: "fantasy",
+        baseDeck: "none",
+        startingHP: 20,
+        startingHandSize: 5,
+        maxHandSize: 7,
+        resources: [{ name:"Mana", emoji:"💧", startAmount:3, regenPerTurn:3, max:10 }],
+        winCondition: "Reduce opponent HP to 0",
+        cardTypes: [
+          { type:"creature", hasAttack:true },
+          { type:"spell",    hasAttack:false },
+          { type:"equipment",hasAttack:false }
+        ],
+        aiStrategy: "aggressive",
+        specialRules: [
+          "Shadowbound creatures deal double damage at night (odd turns)",
+          "Light spells remove Shadowbound status from any creature",
+          "Equipment cards persist on the field until destroyed"
+        ],
+        deck: [
+          { id:"rs1",  name:"Shadow Knight",    type:"creature",  emoji:"🗡️", cost:3, attack:4, defense:2, hp:3, effect:"Shadowbound: deals 8 damage on odd turns.", count:2 },
+          { id:"rs2",  name:"Ancient Paladin",  type:"creature",  emoji:"⚔️", cost:4, attack:3, defense:4, hp:4, effect:"When played, heal 3 HP.", count:2 },
+          { id:"rs3",  name:"Forest Sprite",    type:"creature",  emoji:"🌿", cost:1, attack:1, defense:1, hp:2, effect:"Draw 1 card when played.", count:3 },
+          { id:"rs4",  name:"Void Drake",       type:"creature",  emoji:"🐉", cost:6, attack:7, defense:3, hp:5, effect:"Shadowbound. Attacks all enemy field creatures.", count:1 },
+          { id:"rs5",  name:"Iron Golem",       type:"creature",  emoji:"🤖", cost:5, attack:3, defense:6, hp:6, effect:"Takes half damage from spells (round down).", count:1 },
+          { id:"rs6",  name:"Goblin Scout",     type:"creature",  emoji:"👺", cost:1, attack:2, defense:1, hp:1, effect:"If this is the first card played this turn, draw 1.", count:2 },
+          { id:"rs7",  name:"Elven Archer",     type:"creature",  emoji:"🏹", cost:2, attack:3, defense:1, hp:2, effect:"Can attack before being placed on field.", count:2 },
+          { id:"rs8",  name:"Fireball",         type:"spell",     emoji:"🔥", cost:3, attack:null, defense:null, hp:null, effect:"Deal 5 damage to opponent.", count:2 },
+          { id:"rs9",  name:"Healing Light",    type:"spell",     emoji:"✨", cost:2, attack:null, defense:null, hp:null, effect:"Heal 4 HP. Remove Shadowbound from one ally.", count:2 },
+          { id:"rs10", name:"Shadow Bolt",      type:"spell",     emoji:"⚡", cost:2, attack:null, defense:null, hp:null, effect:"Deal 3 damage. Target creature becomes Shadowbound.", count:2 },
+          { id:"rs11", name:"Arcane Shield",    type:"spell",     emoji:"🛡️", cost:2, attack:null, defense:null, hp:null, effect:"Prevent the next 4 damage dealt to you.", count:2 },
+          { id:"rs12", name:"Blizzard",         type:"spell",     emoji:"❄️", cost:4, attack:null, defense:null, hp:null, effect:"Deal 2 damage to all enemy field creatures.", count:1 },
+          { id:"rs13", name:"Sword of Dawn",    type:"equipment", emoji:"🌅", cost:2, attack:null, defense:null, hp:null, effect:"Attached creature gains +2 attack. Removes Shadowbound.", count:1 },
+          { id:"rs14", name:"Void Amulet",      type:"equipment", emoji:"🔮", cost:3, attack:null, defense:null, hp:null, effect:"Attached creature gains Shadowbound and +3 attack.", count:1 },
+          { id:"rs15", name:"Mana Crystal",     type:"spell",     emoji:"💎", cost:0, attack:null, defense:null, hp:null, effect:"Gain 3 mana immediately.", count:2 },
+          { id:"rs16", name:"Necromancer",      type:"creature",  emoji:"💀", cost:4, attack:2, defense:2, hp:3, effect:"When a creature dies, deal 1 damage to opponent.", count:1 },
+          { id:"rs17", name:"Time Warden",      type:"creature",  emoji:"⌛", cost:5, attack:2, defense:3, hp:4, effect:"Exhaust an enemy creature. Draw 1 card.", count:1 },
+          { id:"rs18", name:"Storm Hawk",       type:"creature",  emoji:"🦅", cost:3, attack:4, defense:1, hp:2, effect:"Deals damage before enemy counterattacks.", count:2 },
+          { id:"rs19", name:"Rune of Power",    type:"spell",     emoji:"🔱", cost:1, attack:null, defense:null, hp:null, effect:"A chosen creature gains +2 attack until end of turn.", count:2 },
+          { id:"rs20", name:"Fortress Wall",    type:"equipment", emoji:"🏰", cost:3, attack:null, defense:null, hp:null, effect:"Your hero takes 2 less damage from all sources this turn.", count:1 }
+        ],
+        savedAt: Date.now() - 86400000,
+        rating: 4,
+        plays: 3
+      },
+      {
+        title: "Nebula Conquest",
+        tagline: "Deploy fleets across the galaxy — lasers, warp drives, and cold cosmic strategy.",
+        theme: "sci-fi",
+        baseDeck: "none",
+        startingHP: 25,
+        startingHandSize: 4,
+        maxHandSize: 7,
+        resources: [{ name:"Energy", emoji:"⚡", startAmount:3, regenPerTurn:3, max:12 }],
+        winCondition: "Destroy the enemy flagship (reduce HP to 0)",
+        cardTypes: [
+          { type:"creature",  hasAttack:true  },
+          { type:"spell",     hasAttack:false },
+          { type:"equipment", hasAttack:false }
+        ],
+        aiStrategy: "balanced",
+        specialRules: [
+          "Warp cards allow a ship to attack the turn it is played",
+          "Shield cards reduce all incoming damage by 2 until destroyed",
+          "EMP spells exhaust all enemy field ships for one full turn"
+        ],
+        deck: [
+          { id:"nc1",  name:"Fighter Drone",      type:"creature",  emoji:"🚀", cost:1, attack:2, defense:1, hp:1, effect:"Warp: can attack immediately when played.", count:3 },
+          { id:"nc2",  name:"Cruiser",             type:"creature",  emoji:"🛸", cost:3, attack:3, defense:3, hp:3, effect:"Draw 1 card when this ship destroys an enemy.", count:2 },
+          { id:"nc3",  name:"Battlecruiser",       type:"creature",  emoji:"⚓", cost:5, attack:5, defense:4, hp:5, effect:"Attacks twice if opponent has no field ships.", count:1 },
+          { id:"nc4",  name:"Stealth Corvette",    type:"creature",  emoji:"🌑", cost:2, attack:3, defense:1, hp:2, effect:"Cannot be targeted by spells the turn it is played.", count:2 },
+          { id:"nc5",  name:"Carrier",             type:"creature",  emoji:"🏗️", cost:4, attack:1, defense:5, hp:5, effect:"When played, add 2 Fighter Drones to your hand.", count:1 },
+          { id:"nc6",  name:"Repair Bot",          type:"creature",  emoji:"🤖", cost:2, attack:0, defense:2, hp:2, effect:"At start of your turn, heal 2 HP to your hero.", count:2 },
+          { id:"nc7",  name:"Photon Torpedo",      type:"spell",     emoji:"💥", cost:2, attack:null, defense:null, hp:null, effect:"Deal 4 damage to opponent.", count:3 },
+          { id:"nc8",  name:"EMP Pulse",           type:"spell",     emoji:"🌀", cost:3, attack:null, defense:null, hp:null, effect:"Exhaust all enemy ships. They cannot attack next turn.", count:2 },
+          { id:"nc9",  name:"Warp Core Breach",    type:"spell",     emoji:"🌠", cost:4, attack:null, defense:null, hp:null, effect:"Deal 3 damage to all enemies. Draw 1 card.", count:1 },
+          { id:"nc10", name:"Emergency Shields",   type:"spell",     emoji:"🛡️", cost:2, attack:null, defense:null, hp:null, effect:"Prevent the next 5 damage to your hero.", count:2 },
+          { id:"nc11", name:"Energy Tap",          type:"spell",     emoji:"🔋", cost:0, attack:null, defense:null, hp:null, effect:"Gain 3 energy immediately.", count:2 },
+          { id:"nc12", name:"Laser Overcharge",    type:"spell",     emoji:"🔴", cost:1, attack:null, defense:null, hp:null, effect:"A chosen ship gains +3 attack this turn only.", count:2 },
+          { id:"nc13", name:"Plasma Cannon",       type:"equipment", emoji:"🔫", cost:2, attack:null, defense:null, hp:null, effect:"Attached ship gains +2 attack permanently.", count:2 },
+          { id:"nc14", name:"Ablative Armour",     type:"equipment", emoji:"🧱", cost:2, attack:null, defense:null, hp:null, effect:"Attached ship gains +3 HP and takes 1 less damage.", count:2 },
+          { id:"nc15", name:"Warp Drive",          type:"equipment", emoji:"🌀", cost:2, attack:null, defense:null, hp:null, effect:"Attached ship gains Warp: can attack the turn it's played.", count:1 },
+          { id:"nc16", name:"Scout Probe",         type:"creature",  emoji:"📡", cost:1, attack:1, defense:1, hp:1, effect:"When played, look at the top 2 cards of your deck.", count:2 },
+          { id:"nc17", name:"Ion Cannon Platform", type:"creature",  emoji:"🎯", cost:4, attack:4, defense:2, hp:3, effect:"Deal 2 damage to opponent whenever it survives combat.", count:1 },
+          { id:"nc18", name:"Nebula Storm",        type:"spell",     emoji:"🌌", cost:3, attack:null, defense:null, hp:null, effect:"Deal 2 damage to all field creatures on both sides.", count:1 },
+          { id:"nc19", name:"Reinforcements",      type:"spell",     emoji:"📦", cost:2, attack:null, defense:null, hp:null, effect:"Draw 2 cards.", count:2 },
+          { id:"nc20", name:"Dreadnought",         type:"creature",  emoji:"💫", cost:6, attack:6, defense:5, hp:6, effect:"When played, deal 3 damage to opponent directly.", count:1 }
+        ],
+        savedAt: Date.now() - 172800000,
+        rating: 5,
+        plays: 7
+      }
+    ];
+    starters.forEach(g => Library.save(g, g.rating));
+  }
+
   Library.render();
   DeckPresets.init();
   Intro.init();
