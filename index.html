@@ -231,11 +231,81 @@ a{color:var(--acc2);}
 .drow{display:flex;align-items:center;justify-content:center;gap:1rem;}
 .dpill{background:var(--s2);border:1px solid var(--brd2);border-radius:7px;padding:5px 13px;font-size:.73rem;font-weight:700;color:var(--muted2);display:flex;align-items:center;gap:5px;}
 
-.hz{border-top:1px solid var(--border);background:rgba(15,16,23,.9);padding:.65rem 1rem;flex-shrink:0;}
-.hlr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
-.hcards{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:3px;}
-.hcards::-webkit-scrollbar{height:3px;}
-.hcards::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:2px;}
+/* ── FAN HAND ZONE ── */
+.hz{border-top:1px solid var(--border);background:rgba(12,12,22,.95);padding:.5rem 1rem .65rem;flex-shrink:0;position:relative;}
+.hlr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;}
+/* Fan container — fixed height so cards overflow upward */
+.hand-fan{position:relative;height:120px;display:flex;align-items:flex-end;justify-content:center;overflow:visible;}
+/* Each fan card wrapper — JS sets transform inline */
+.fan-card-wrap{
+  position:absolute;bottom:0;
+  transform-origin:bottom center;
+  transition:transform .22s cubic-bezier(.34,1.4,.64,1), z-index 0s;
+  cursor:grab;
+  touch-action:none; /* prevent scroll hijack during drag */
+  will-change:transform;
+}
+.fan-card-wrap:active{cursor:grabbing;}
+/* Lift on hover/select */
+.fan-card-wrap.hovered  .pc{border-color:var(--accent);transform:translateY(-10px) scale(1.06);}
+.fan-card-wrap.selected .pc{border-color:var(--acc2);box-shadow:0 0 0 2px rgba(164,128,255,.4);transform:translateY(-18px) scale(1.09);}
+
+/* ── DRAG GHOST ── */
+#drag-ghost{
+  position:fixed;z-index:9999;pointer-events:none;
+  width:76px;height:108px;border-radius:9px;overflow:hidden;
+  transform:translate(-50%,-60%) rotate(0deg) scale(1.12);
+  box-shadow:0 18px 40px rgba(0,0,0,.55);
+  opacity:0;transition:opacity .12s;
+  will-change:transform;
+}
+#drag-ghost.visible{opacity:1;}
+
+/* ── FIELD DROP ZONE ── */
+.drop-zone-active{
+  outline:2px dashed rgba(124,92,252,.6);
+  outline-offset:3px;
+  border-radius:var(--r);
+  background:rgba(124,92,252,.06) !important;
+  transition:background .2s,outline .2s;
+}
+.drop-zone-ready{
+  outline:2px solid rgba(124,92,252,.9);
+  background:rgba(124,92,252,.14) !important;
+}
+/* Drop hint label that appears on the field during drag */
+.drop-hint{
+  position:absolute;inset:0;display:none;
+  align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;letter-spacing:.1em;
+  color:rgba(164,128,255,.8);text-transform:uppercase;
+  pointer-events:none;z-index:5;
+}
+.fz{min-height:75px;position:relative;}
+.fz .drop-hint{display:none;}
+.fz.drop-zone-active .drop-hint,
+.fz.drop-zone-ready  .drop-hint{display:flex;}
+
+/* Field cards — upright, NOT fanned */
+.fc{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 3px;min-height:68px;align-items:center;position:relative;z-index:1;}
+.fc::-webkit-scrollbar{display:none;}
+.ef{color:var(--muted);font-size:.73rem;padding:.75rem 0;}
+
+/* Exhausted field card tilt */
+.pc.exhausted{opacity:.55;transform:rotate(5deg) !important;}
+
+/* PLAY CARDS — base (used in hand via fan-card-wrap and on field directly) */
+.pc{flex-shrink:0;width:76px;height:108px;border-radius:9px;border:1.5px solid var(--brd2);background:var(--s2);display:flex;flex-direction:column;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;position:relative;overflow:hidden;user-select:none;}
+.pc.ec{cursor:default;}
+.pc.ec:hover{transform:none;}
+.pc.selected{border-color:var(--acc2);box-shadow:0 0 0 2px rgba(164,128,255,.35);}
+.pct{padding:4px 5px;display:flex;justify-content:space-between;align-items:flex-start;}
+.pcc{background:var(--accent);color:white;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.58rem;}
+.pca{font-weight:800;font-size:.88rem;color:var(--gold);}
+.pcm{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+.pcb{padding:2px 5px 4px;}
+.pcn{font-weight:700;color:var(--text);font-size:.58rem;line-height:1.2;margin-bottom:1px;}
+.pck{font-size:.53rem;text-transform:uppercase;letter-spacing:.05em;}
 
 .ar{display:flex;gap:5px;padding:.65rem 1rem;border-top:1px solid var(--border);background:var(--s1);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .ar::-webkit-scrollbar{display:none;}
@@ -250,21 +320,6 @@ a{color:var(--acc2);}
 .le.ea{border-left-color:var(--red);color:#fca5a5;}
 .le.sys{border-left-color:var(--gold);color:var(--gold2);}
 .le.win{border-left-color:var(--green);color:#6ee7b7;font-weight:700;}
-
-/* PLAY CARDS */
-.pc{flex-shrink:0;width:76px;height:108px;border-radius:9px;border:1.5px solid var(--brd2);background:var(--s2);display:flex;flex-direction:column;cursor:pointer;transition:transform .18s,border-color .18s;position:relative;overflow:hidden;user-select:none;}
-.pc:hover{transform:translateY(-5px);border-color:var(--accent);}
-.pc.selected{border-color:var(--acc2);box-shadow:0 0 0 2px rgba(164,128,255,.35);transform:translateY(-7px);}
-.pc.exhausted{opacity:.55;}
-.pc.ec{cursor:default;}
-.pc.ec:hover{transform:none;}
-.pct{padding:4px 5px;display:flex;justify-content:space-between;align-items:flex-start;}
-.pcc{background:var(--accent);color:white;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.58rem;}
-.pca{font-weight:800;font-size:.88rem;color:var(--gold);}
-.pcm{flex:1;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
-.pcb{padding:2px 5px 4px;}
-.pcn{font-weight:700;color:var(--text);font-size:.58rem;line-height:1.2;margin-bottom:1px;}
-.pck{font-size:.53rem;text-transform:uppercase;letter-spacing:.05em;}
 
 /* ═══════════════════════════════════════════
    SETTINGS PANEL
@@ -517,21 +572,21 @@ a{color:var(--acc2);}
       <div class="islide vis" id="is0">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">Tired of the same<br>old card games?</div>
         <div class="isub">Millions of decks. The same dozen rules.</div>
-        <div class="itap">Tap anywhere to continue</div>
+        <div class="itap">Tap anywhere to continue /Here to skip/</div>
       </div>
 
       <!-- Slide 1 -->
       <div class="islide" id="is1">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">What if you could<br>invent your own?</div>
         <div class="isub">Any theme. Any rules. Any deck — from Hanafuda to Tarot.</div>
-        <div class="itap">Tap anywhere to continue</div>
+        <div class="itap">Tap anywhere to continue /Here to skip/</div>
       </div>
 
       <!-- Slide 2 -->
       <div class="islide" id="is2">
         <div class="iline" style="font-size:clamp(2rem,8vw,3.2rem);">Just describe it.<br>AI does the rest.</div>
         <div class="isub">Generate a complete, playable card game from a single sentence. Then actually play it.</div>
-        <div class="itap">Tap anywhere to continue</div>
+        <div class="itap">Tap anywhere to continue /Here to skip/</div>
       </div>
 
       <!-- Slide 3 — final -->
@@ -715,8 +770,9 @@ a{color:var(--acc2);}
 
         <!-- Player -->
         <div>
-          <div class="fz">
+          <div class="fz" id="pfield-zone">
             <div class="fl">Your Field</div>
+            <div class="drop-hint">Drop to play</div>
             <div class="fc" id="pfield"></div>
           </div>
           <div style="margin-top:7px;" class="ph">
@@ -735,9 +791,9 @@ a{color:var(--acc2);}
       <div class="hz">
         <div class="hlr">
           <div class="sl" style="margin:0;">Hand <span style="color:var(--muted);font-weight:400;" id="hcnt"></span></div>
-          <div style="font-size:.67rem;color:var(--muted);">Tap → select · tap again → play</div>
+          <div style="font-size:.62rem;color:var(--muted);">Tap to select · tap again or drag to play</div>
         </div>
-        <div class="hcards" id="phand"></div>
+        <div class="hand-fan" id="phand"></div>
       </div>
 
       <div class="ar">
@@ -897,8 +953,10 @@ a{color:var(--acc2);}
   </div>
 </div>
 
+<!-- Drag ghost card -->
+<div id="drag-ghost"></div>
+
 <script>
-'use strict';
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
@@ -1190,15 +1248,65 @@ const GameRunner={
   },
   rHand(hand){
     const el=$('phand');if(!el)return;
-    $('hcnt').textContent='('+hand.length+')';el.innerHTML='';
-    hand.forEach(c=>{const d=this.mkCard(c,'h',true);if(this.sel?.uid===c.uid)d.classList.add('selected');el.appendChild(d);});
+    $('hcnt').textContent='('+hand.length+')';
+    el.innerHTML='';
+    const n=hand.length;if(!n)return;
+
+    // Fan geometry
+    const maxSpread=18;   // max total rotation degrees of the whole fan
+    const maxOffset=32;   // max horizontal spread px per side
+    const liftBase=8;     // base upward lift for side cards
+    const spread=Math.min(maxSpread, n*3.5);
+    const stepRot=n>1?spread/(n-1):0;
+    const stepX  =n>1?(Math.min(maxOffset*2,(n-1)*20))/(n-1):0;
+
+    hand.forEach((c,i)=>{
+      const mid=(n-1)/2;
+      const t=i-mid;
+      const rot=t*stepRot;
+      const tx=t*stepX;
+      const ty=Math.abs(t)*liftBase*0.7; // side cards drop slightly for realistic fan
+
+      const wrap=document.createElement('div');
+      wrap.className='fan-card-wrap'+(this.sel?.uid===c.uid?' selected':'');
+      wrap.dataset.uid=c.uid;
+      wrap.style.transform=`translateX(${tx}px) translateY(${ty}px) rotate(${rot}deg)`;
+      wrap.style.zIndex=i; // left cards behind right cards
+
+      const card=this.mkCard(c,'h',true);
+      wrap.appendChild(card);
+
+      // Hover lift (desktop)
+      wrap.addEventListener('mouseenter',()=>{
+        if(CardDrag.dragging)return;
+        wrap.classList.add('hovered');
+        wrap.style.zIndex=50;
+      });
+      wrap.addEventListener('mouseleave',()=>{
+        wrap.classList.remove('hovered');
+        wrap.style.zIndex=i;
+      });
+
+      // Tap — select / play
+      wrap.addEventListener('click', e=>{
+        if(CardDrag.dragMoved)return; // suppress click after drag
+        this.onHand(c);
+      });
+
+      // Drag — touch & mouse
+      CardDrag.attach(wrap, c, ()=>this.onHand(c), ()=>this.play(c));
+
+      el.appendChild(wrap);
+    });
   },
   mkCard(c,zone,isP){
     const tc={creature:'#8b5cf6',spell:'#06b6d4',equipment:'#f0b429',trap:'#ef476f',event:'#06d6a0'}[c.type]||'#6b6a88';
-    const d=document.createElement('div');d.className='pc'+(isP?'':' ec');d.dataset.uid=c.uid;
+    const d=document.createElement('div');
+    d.className='pc'+(isP&&zone!=='h'?'':isP?'':' ec');
+    d.dataset.uid=c.uid;
     d.innerHTML=`<div class="pct"><div class="pcc" style="background:${tc}">${c.cost||0}</div>${c.attack!=null?`<div class="pca">${c.attack}</div>`:''}</div><div class="pcm">${c.emoji||'🃏'}</div><div class="pcb"><div class="pcn">${c.name}</div><div class="pck" style="color:${tc}">${c.type}${c.type==='creature'?` ❤️${c.hp}`:''}</div></div>`;
-    if(zone==='h')d.onclick=()=>this.onHand(c);
-    else if(zone==='fp')d.onclick=()=>this.onField(c);
+    // field card tap
+    if(zone==='fp')d.onclick=()=>this.onField(c);
     return d;
   },
   onHand(c){
@@ -1719,10 +1827,137 @@ const Intro = {
   }
 };
 
+/* ══════════════════════════════════════
+   MODULE: CardDrag
+   Handles drag-to-play for hand cards.
+   Works with both touch and mouse.
+══════════════════════════════════════ */
+const CardDrag={
+  dragging:false,
+  dragMoved:false,
+  card:null,
+  wrap:null,
+  ghost:null,
+  fieldZone:null,
+  overField:false,
+  startX:0,startY:0,
+  DRAG_THRESHOLD:8, // px before drag is considered started
+
+  init(){
+    this.ghost=$('drag-ghost');
+    this.fieldZone=$('pfield-zone');
+  },
+
+  attach(wrap, card, onTap, onPlay){
+    // Touch
+    wrap.addEventListener('touchstart', e=>{
+      const t=e.touches[0];
+      this.startX=t.clientX;this.startY=t.clientY;
+      this._prepare(wrap,card,onPlay);
+    },{passive:true});
+
+    wrap.addEventListener('touchmove', e=>{
+      const t=e.touches[0];
+      const dx=t.clientX-this.startX,dy=t.clientY-this.startY;
+      if(!this.dragging&&Math.sqrt(dx*dx+dy*dy)>this.DRAG_THRESHOLD){
+        this.dragging=true;this.dragMoved=true;
+        this._startDrag(wrap,card);
+      }
+      if(this.dragging){
+        e.preventDefault();
+        this._moveDrag(t.clientX,t.clientY);
+      }
+    },{passive:false});
+
+    wrap.addEventListener('touchend', e=>{
+      if(this.dragging)this._endDrag();
+      else{
+        // It was a tap, not a drag
+        setTimeout(()=>{this.dragMoved=false;},50);
+      }
+    });
+
+    // Mouse
+    wrap.addEventListener('mousedown', e=>{
+      if(e.button!==0)return;
+      this.startX=e.clientX;this.startY=e.clientY;
+      this._prepare(wrap,card,onPlay);
+      const onMove=ev=>{
+        const dx=ev.clientX-this.startX,dy=ev.clientY-this.startY;
+        if(!this.dragging&&Math.sqrt(dx*dx+dy*dy)>this.DRAG_THRESHOLD){
+          this.dragging=true;this.dragMoved=true;
+          this._startDrag(wrap,card);
+        }
+        if(this.dragging)this._moveDrag(ev.clientX,ev.clientY);
+      };
+      const onUp=()=>{
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUp);
+        if(this.dragging)this._endDrag();
+        else setTimeout(()=>{this.dragMoved=false;},50);
+      };
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
+    });
+  },
+
+  _prepare(wrap,card,onPlay){
+    this.dragging=false;this.dragMoved=false;
+    this.card=card;this.wrap=wrap;this.onPlay=onPlay;
+    this.overField=false;
+  },
+
+  _startDrag(wrap,card){
+    // Build ghost from card HTML
+    const pc=wrap.querySelector('.pc');
+    this.ghost.innerHTML=pc.outerHTML;
+    this.ghost.classList.add('visible');
+    // Dim the source card
+    pc.style.opacity='.35';
+    // Show drop zone
+    this.fieldZone.classList.add('drop-zone-active');
+  },
+
+  _moveDrag(cx,cy){
+    // Move ghost
+    this.ghost.style.left=cx+'px';
+    this.ghost.style.top=cy+'px';
+    // Check if over player field zone
+    const rect=this.fieldZone.getBoundingClientRect();
+    const over=cx>=rect.left&&cx<=rect.right&&cy>=rect.top&&cy<=rect.bottom;
+    if(over!==this.overField){
+      this.overField=over;
+      this.fieldZone.classList.toggle('drop-zone-ready',over);
+    }
+  },
+
+  _endDrag(){
+    this.dragging=false;
+    this.ghost.classList.remove('visible');
+    this.ghost.innerHTML='';
+
+    const pc=this.wrap?.querySelector('.pc');
+    if(pc)pc.style.opacity='';
+
+    this.fieldZone.classList.remove('drop-zone-active','drop-zone-ready');
+
+    if(this.overField&&this.onPlay){
+      // Trigger play with a slam animation on the field zone
+      this.fieldZone.style.transition='transform .12s';
+      this.fieldZone.style.transform='scale(1.03)';
+      setTimeout(()=>{this.fieldZone.style.transform='';},150);
+      this.onPlay();
+    }
+    this.overField=false;
+    this.card=null;this.wrap=null;this.onPlay=null;
+  }
+};
+
 (function(){
   LLMConfig.load();
   Cfg.load();
   Library.load();
+  CardDrag.init();
 
   // Seed two starter games if library is empty
   if (Library.data.length === 0) {
