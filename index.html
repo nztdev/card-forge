@@ -869,8 +869,8 @@ a{color:var(--acc2);}
     <div class="fg"><label class="flt">API Key</label><input type="password" class="fi" id="gkey" placeholder="AIza..." oninput="LLMConfig.saveKeys()"><div class="kw">→ <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a></div></div>
     <div class="fg"><label class="flt">Model</label>
       <select class="fsel" id="gmodel" onchange="LLMConfig.saveKeys()">
-        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</option>
-        <option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash Preview</option>
+        <option value="gemini-3.5-flash">Gemini 3.5 Flash (Recommended)</option>
+        <option value="gemini-3.5-flash">Gemini 3.5 Flash Preview</option>
         <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
       </select>
     </div>
@@ -985,10 +985,10 @@ const App={
    MODULE: LLMConfig
 ══════════════════════════════════════ */
 const LLMConfig={
-  prov:'claude',ck:'',gk:'',cm:'claude-sonnet-4-20250514',gm:'gemini-2.0-flash',
+  prov:'claude',ck:'',gk:'',cm:'claude-sonnet-4-20250514',gm:'gemini-3.5-flash',
   load(){
     this.prov=LS('cp','claude');this.ck=LS('cck','');this.gk=LS('cgk','');
-    this.cm=LS('ccm','claude-sonnet-4-20250514');this.gm=LS('cgm','gemini-2.0-flash');
+    this.cm=LS('ccm','claude-sonnet-4-20250514');this.gm=LS('cgm','gemini-3.5-flash');
     if($('ckey'))  $('ckey').value=this.ck;
     if($('gkey'))  $('gkey').value=this.gk;
     if($('cmodel'))$('cmodel').value=this.cm;
